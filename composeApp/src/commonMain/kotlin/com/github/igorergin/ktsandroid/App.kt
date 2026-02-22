@@ -1,48 +1,45 @@
 package com.github.igorergin.ktsandroid
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
 
-import ktsandroidproject.composeapp.generated.resources.Res
-import ktsandroidproject.composeapp.generated.resources.compose_multiplatform
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
+import coil3.network.ktor3.KtorNetworkFetcherFactory
+import com.github.igorergin.ktsandroid.presentation.ui.login.LoginScreen
+import com.github.igorergin.ktsandroid.presentation.ui.welcome.WelcomeScreen
+import kotlinx.serialization.Serializable
+
+// --- ВАЖНО: Маршруты вынесены за пределы функции! ---
+@Serializable
+object Welcome
+
+@Serializable
+object Login
 
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+    // Инициализация Coil для работы с сетью
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context)
+            .components {
+                add(KtorNetworkFetcherFactory())
             }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
+            .build()
+    }
+
+    val navController = rememberNavController()
+
+    MaterialTheme {
+        NavHost(navController = navController, startDestination = Welcome) {
+            composable<Welcome> {
+                WelcomeScreen( onNavigateToLogin = { navController.navigate(Login) })
+            }
+            composable<Login> {
+                LoginScreen()
             }
         }
     }
