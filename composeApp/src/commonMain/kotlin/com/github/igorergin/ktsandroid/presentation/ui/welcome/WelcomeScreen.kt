@@ -1,130 +1,109 @@
 package com.github.igorergin.ktsandroid.presentation.ui.welcome
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.*
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.github.igorergin.ktsandroid.theme.AppTheme
+import com.github.igorergin.ktsandroid.theme.VKSecondaryText
+import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
-import kotlinx.coroutines.delay
+import com.github.igorergin.ktsandroid.presentation.common.VKButton
+import com.github.igorergin.ktsandroid.domain.model.OnboardingPage
 import ktsandroidproject.composeapp.generated.resources.Res
-import ktsandroidproject.composeapp.generated.resources.compose_multiplatform
-import org.jetbrains.compose.resources.painterResource
+import ktsandroidproject.composeapp.generated.resources.onboarding_1_desc
+import ktsandroidproject.composeapp.generated.resources.onboarding_1_title
+import ktsandroidproject.composeapp.generated.resources.onboarding_2_desc
+import ktsandroidproject.composeapp.generated.resources.onboarding_2_title
+import ktsandroidproject.composeapp.generated.resources.onboarding_3_desc
+import ktsandroidproject.composeapp.generated.resources.onboarding_3_title
+import ktsandroidproject.composeapp.generated.resources.welcome_next
+import ktsandroidproject.composeapp.generated.resources.welcome_skip
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
-    // Состояние для плавного появления текста и кнопки
-    var isContentVisible by rememberSaveable { mutableStateOf(false) }
-
-    // Запускаем таймер при открытии экрана
-    LaunchedEffect(Unit) {
-        delay(300)
-        isContentVisible = true
+    // Данные для карусели
+    val pages = remember {
+        listOf(
+            OnboardingPage(
+                title = Res.string.onboarding_1_title,
+                description = Res.string.onboarding_1_desc,
+                imageUrl = "https://avatars.githubusercontent.com/u/32689599?s=280&v=4"
+            ),
+            OnboardingPage(
+                Res.string.onboarding_2_title,
+                Res.string.onboarding_2_desc,
+                "https://avatars.githubusercontent.com/u/32689599?s=280&v=4"
+            ),
+            OnboardingPage(
+                Res.string.onboarding_3_title,
+                Res.string.onboarding_3_desc,
+                "https://avatars.githubusercontent.com/u/32689599?s=280&v=4"
+            )
+        )
     }
 
-    // Анимация "левитации" для картинки
-    val infiniteTransition = rememberInfiniteTransition(label = "floating")
-    val floatingOffsetY by infiniteTransition.animateFloat(
-        initialValue = -10f,
-        targetValue = 10f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2000, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "offsetY"
-    )
+    val pagerState = rememberPagerState(pageCount = { pages.size })
 
-    val backgroundBrush = Brush.verticalGradient(
-        colors = listOf(Color(0xFF1E1E2E), Color(0xFF2D2D44))
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundBrush),
-        contentAlignment = Alignment.Center
-    ) {
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background
+    ) { padding ->
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(24.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // --- ПАРЯЩАЯ КАРТИНКА С COIL ---
-            Box(
+            // Карусель
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier
-                    .offset(y = floatingOffsetY.dp) // Применяем анимацию сдвига
-                    .size(220.dp)
-                    .shadow(16.dp, CircleShape)
-                    .clip(CircleShape)
-                    .border(4.dp, Color.White.copy(alpha = 0.8f), CircleShape)
-            ) {
-                AsyncImage(
-                    model = "https://avatars.githubusercontent.com/u/32689599?s=280&v=4",
-                    contentDescription = "Welcome Graphic",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                    placeholder = painterResource(Res.drawable.compose_multiplatform),
-                    error = painterResource(Res.drawable.compose_multiplatform)
-                )
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) { index ->
+                OnboardingContent(pages[index])
             }
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // --- ПЛАВНО ПОЯВЛЯЮЩИЙСЯ ТЕКСТ И КНОПКА ---
-            AnimatedVisibility(
-                visible = isContentVisible,
-                enter = fadeIn(animationSpec = tween(800)) + slideInVertically(
-                    initialOffsetY = { 50 },
-                    animationSpec = tween(800)
-                )
+            Row(
+                Modifier
+                    .height(50.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Добро пожаловать",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = Color.White
-                    )
+                repeat(pages.size) { iteration ->
+                    val color = if (pagerState.currentPage == iteration)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        VKSecondaryText.copy(alpha = 0.5f)
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Войди, чтобы продолжить",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    Button(
-                        onClick = onNavigateToLogin,
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF6200EA)
-                        )
-                    ) {
-                        Text("Поехали!", style = MaterialTheme.typography.titleMedium)
-                    }
+                            .padding(4.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .size(8.dp)
+                    )
                 }
             }
+
+            VKButton(
+                text = if (pagerState.currentPage == pages.size - 1) stringResource(Res.string.welcome_next) else stringResource(Res.string.welcome_skip),
+                onClick = onNavigateToLogin,
+                modifier = Modifier
+                    .padding(24.dp)
+            )
         }
     }
 }
@@ -132,8 +111,44 @@ fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
 @Preview
 @Composable
 fun WelcomeScreenPreview() {
-    MaterialTheme {
+    AppTheme {
         WelcomeScreen(onNavigateToLogin = {})
     }
 }
 
+@Composable
+fun OnboardingContent(page: OnboardingPage) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        AsyncImage(
+            model = page.imageUrl,
+            contentDescription = null,
+            modifier = Modifier
+                .size(200.dp)
+                .clip(CircleShape)
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        Text(
+            text = stringResource(page.title),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Companion.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(page.description),
+            style = MaterialTheme.typography.bodyLarge,
+            color = VKSecondaryText,
+            textAlign = TextAlign.Center
+        )
+    }
+}
