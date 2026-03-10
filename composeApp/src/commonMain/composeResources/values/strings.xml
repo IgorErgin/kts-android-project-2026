@@ -1,24 +1,24 @@
 <resources>
-    <string name="app_name">VK Profile Companion</string>
+    <string name="app_name">GitHub Explorer</string>
 
     <!-- Login Screen -->
     <string name="login_title">Авторизация</string>
-    <string name="login_label">Логин</string>
-    <string name="password_label">Пароль</string>
+    <string name="login_label">Логин (Username)</string>
+    <string name="password_label">Пароль / Token</string>
     <string name="login_button">Войти</string>
     <string name="show_password">Показать пароль</string>
     <string name="hide_password">Скрыть пароль</string>
 
     <!-- Welcome Screen -->
-    <string name="welcome_next">Начать</string>
+    <string name="welcome_next">Далее</string>
     <string name="welcome_skip">Пропустить</string>
 
-    <string name="onboarding_1_title">Добро пожаловать</string>
-    <string name="onboarding_1_desc">Ваш личный помощник в мире VK. Просматривайте профиль и друзей легко.</string>
+    <string name="onboarding_1_title">GitHub Explorer</string>
+    <string name="onboarding_1_desc">Ваш мобильный клиент для удобной работы с репозиториями и кодом.</string>
 
-    <string name="onboarding_2_title">Ваши друзья</string>
-    <string name="onboarding_2_desc">Следите за обновлениями ваших близких и оставайтесь на связи 24/7.</string>
+    <string name="onboarding_2_title">Исследуйте проекты</string>
+    <string name="onboarding_2_desc">Ищите репозитории, просматривайте исходный код и ставьте звезды.</string>
 
-    <string name="onboarding_3_title">Полный контроль</string>
-    <string name="onboarding_3_desc">Меняйте аватар, ищите новых людей и управляйте своими группами.</string>
+    <string name="onboarding_3_title">Ваш профиль</string>
+    <string name="onboarding_3_desc">Управляйте своими репозиториями и отслеживайте активность прямо с телефона.</string>
 </resources>
