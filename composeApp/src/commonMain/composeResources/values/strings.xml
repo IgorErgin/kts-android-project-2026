@@ -21,4 +21,7 @@
 
     <string name="onboarding_3_title">Ваш профиль</string>
     <string name="onboarding_3_desc">Управляйте своими репозиториями и отслеживайте активность прямо с телефона.</string>
+    <string name="loading_auth">Авторизация...</string>
+    <string name="auth">Войти с GitHub</string>
+
 </resources>

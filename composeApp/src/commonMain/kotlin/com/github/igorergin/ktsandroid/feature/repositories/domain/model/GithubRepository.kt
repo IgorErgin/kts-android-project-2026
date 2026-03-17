@@ -1,7 +1,7 @@
 package com.github.igorergin.ktsandroid.feature.repositories.domain.model
 
 data class GithubRepository(
-    val id: Int,
+    val id: Long,
     val name: String,
     val fullName: String,
     val description: String,

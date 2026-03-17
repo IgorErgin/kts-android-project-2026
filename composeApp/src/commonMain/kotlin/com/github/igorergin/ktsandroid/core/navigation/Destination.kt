@@ -17,9 +17,10 @@ sealed interface Destination {
     @Serializable
     data object Main : Destination
 
+    @Serializable data object Profile : Destination
+
     /**
      * Маршрут с параметрами.
-     * Параметры автоматически сериализуются библиотекой навигации.
      */
     @Serializable
     data class Detail(

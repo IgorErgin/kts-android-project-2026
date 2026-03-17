@@ -2,98 +2,98 @@ package com.github.igorergin.ktsandroid.feature.repositories.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.igorergin.ktsandroid.feature.repositories.data.repository.GithubRepoRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
+import com.github.igorergin.ktsandroid.feature.repositories.domain.repository.GithubRepoRepository
+import io.github.aakira.napier.Napier
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class MainViewModel(
-    private val repository: GithubRepoRepository = GithubRepoRepository()
+    private val repository: GithubRepoRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainUiState())
-    val state = _state.asStateFlow()
+    val state: StateFlow<MainUiState> = _state.asStateFlow()
 
-    private val searchQueryFlow = MutableStateFlow("")
-    private var currentPage = 1
+    private var searchJob: Job? = null
 
     init {
-        viewModelScope.launch {
-            searchQueryFlow
-                .debounce(500L)
-                .distinctUntilChanged()
-                .flatMapLatest { query ->
-                    flow {
-                        if (query.isBlank()) {
-                            emit(Result.success(emptyList())); return@flow
-                        }
-                        _state.update { it.copy(isLoading = true, error = null, isEmpty = false) }
-                        currentPage = 1
-                        emit(repository.searchRepositories(query, currentPage))
-                    }
-                }
-                .collect { result ->
-                    result.onSuccess { items ->
-                        _state.update {
-                            it.copy(
-                                isLoading = false,
-                                repositories = items,
-                                isEmpty = items.isEmpty(),
-                                isPaginationExhausted = items.isEmpty()
-                            )
-                        }
-                    }
-                    result.onFailure { e ->
-                        _state.update {
-                            it.copy(
-                                isLoading = false,
-                                error = "Ошибка: ${e.message}",
-                                repositories = emptyList()
-                            )
-                        }
-                    }
-                }
-        }
+        loadData()
     }
 
     fun onSearchQueryChanged(newQuery: String) {
         _state.update { it.copy(query = newQuery) }
-        searchQueryFlow.value = newQuery
-    }
-
-    fun loadNextPage() {
-        val q = searchQueryFlow.value
-        if (q.isBlank() || _state.value.isPaginating || _state.value.isPaginationExhausted || _state.value.isLoading) return
-
-        viewModelScope.launch {
-            _state.update { it.copy(isPaginating = true) }
-            currentPage++
-            repository.searchRepositories(q, currentPage)
-                .onSuccess { newItems ->
-                    _state.update {
-                        it.copy(
-                            isPaginating = false,
-                            repositories = it.repositories + newItems,
-                            isPaginationExhausted = newItems.isEmpty()
-                        )
-                    }
-                }
-                .onFailure { e ->
-                    _state.update { it.copy(isPaginating = false, error = e.message) }
-                    currentPage--
-                }
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(500)
+            if (newQuery.isNotBlank()) {
+                loadData(isRefresh = true)
+            }
         }
     }
 
-    fun retry() {
-        val q = searchQueryFlow.value; searchQueryFlow.value = ""; searchQueryFlow.value = q
+    fun forceRefresh() {
+        Napier.d("User triggered Pull-to-Refresh")
+        loadData(isRefresh = true)
+    }
+
+    fun loadNextPage() {
+        if (_state.value.isPaginating || _state.value.isLoading) return
+        loadData(isPagination = true)
+    }
+
+    private fun loadData(isRefresh: Boolean = false, isPagination: Boolean = false) {
+        val currentState = _state.value
+
+        val targetPage = when {
+            isRefresh -> 1
+            isPagination -> currentState.page + 1
+            else -> 1
+        }
+
+        _state.update {
+            it.copy(
+                isRefreshing = isRefresh,
+                isPaginating = isPagination,
+                isLoading = !isRefresh && !isPagination,
+                error = null,
+                page = targetPage
+            )
+        }
+
+        viewModelScope.launch {
+            repository.searchRepositories(
+                query = currentState.query,
+                page = targetPage,
+                forceRefresh = isRefresh
+            )
+                .catch { e ->
+                    Napier.e("Error loading data", e)
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            isPaginating = false,
+                            error = "Ошибка загрузки: ${e.message}"
+                        )
+                    }
+                }
+                .collect { repos ->
+                    _state.update {
+                        it.copy(
+                            repositories = repos,
+                            isLoading = false,
+                            isRefreshing = false,
+                            isPaginating = false,
+                            error = null
+                        )
+                    }
+                }
+        }
     }
 }

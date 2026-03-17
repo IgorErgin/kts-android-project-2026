@@ -6,8 +6,8 @@ data class MainUiState(
     val query: String = "",
     val repositories: List<GithubRepository> = emptyList(),
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val isPaginating: Boolean = false,
-    val isPaginationExhausted: Boolean = false,
     val error: String? = null,
-    val isEmpty: Boolean = true
+    val page: Int = 1
 )

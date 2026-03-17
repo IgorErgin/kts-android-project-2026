@@ -9,6 +9,14 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
+
+
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 kotlin {
@@ -34,6 +42,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.appauth)
+            implementation(libs.androidx.datastore.preferences)
+
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -55,6 +65,12 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.auth)
+            implementation(libs.androidx.datastore.preferences)
+            implementation(libs.androidx.datastore.preferences)
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
+
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -93,6 +109,8 @@ android {
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
+    ksp(libs.androidx.room.compiler)
+
 }
 
 buildkonfig {
