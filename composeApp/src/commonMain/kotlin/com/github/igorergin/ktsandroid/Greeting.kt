@@ -1,9 +1,0 @@
-package com.github.igorergin.ktsandroid
-
-class Greeting {
-    private val platform = getPlatform()
-
-    fun greet(): String {
-        return "Hello, ${platform.name}!"
-    }
-}
