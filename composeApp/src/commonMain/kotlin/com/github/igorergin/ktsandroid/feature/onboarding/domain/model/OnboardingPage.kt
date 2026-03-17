@@ -1,5 +1,6 @@
 package com.github.igorergin.ktsandroid.feature.onboarding.domain.model
 
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 
 /**
@@ -8,5 +9,5 @@ import org.jetbrains.compose.resources.StringResource
 data class OnboardingPage(
     val title: StringResource,
     val description: StringResource,
-    val imageUrl: String
+    val imageRes: DrawableResource
 )

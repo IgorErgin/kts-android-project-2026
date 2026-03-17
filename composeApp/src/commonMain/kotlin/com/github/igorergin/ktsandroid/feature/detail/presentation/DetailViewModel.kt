@@ -9,13 +9,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class DetailViewModel(
+    private val owner: String,
+    private val repo: String,
     private val repository: DetailRepository = DetailRepository()
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DetailUiState())
     val state = _state.asStateFlow()
 
-    fun loadRepository(owner: String, repo: String) {
+    init {
+        loadRepository()
+    }
+
+    fun loadRepository() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
@@ -24,7 +30,12 @@ class DetailViewModel(
                     _state.update { it.copy(isLoading = false, repository = data) }
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message) }
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = e.message ?: "Неизвестная ошибка"
+                        )
+                    }
                 }
         }
     }

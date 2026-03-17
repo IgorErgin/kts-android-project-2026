@@ -34,7 +34,7 @@ class AndroidAuthManager(private val context: Context) : AuthManager {
             ResponseTypeValues.CODE,
             Uri.parse(GithubAuthConfig.REDIRECT_URI)
         ).setScope(GithubAuthConfig.SCOPES)
-            .setCodeVerifier(null) // <--- ДОБАВЬ ЭТУ СТРОКУ (Она отключает PKCE)
+            .setCodeVerifier(null)
             .build()
 
         // Очищаем предыдущий сервис, если он был
@@ -54,13 +54,12 @@ class AndroidAuthManager(private val context: Context) : AuthManager {
 
         val pendingIntent = PendingIntent.getActivity(context, 0, returnIntent, pendingIntentFlags)
 
-        // Запускаем OAuth флоу (открывает Chrome Custom Tabs)
-        // После успеха библиотека сама дернет pendingIntent, который откроет MainActivity
+
         currentService.performAuthorizationRequest(authRequest, pendingIntent, pendingIntent)
     }
 
     override fun dispose() {
-        authService?.dispose() // Уничтожаем сервис (Фикс ServiceConnectionLeaked)
+        authService?.dispose()
         authService = null
     }
 

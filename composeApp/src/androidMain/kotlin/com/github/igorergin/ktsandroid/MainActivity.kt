@@ -5,7 +5,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
-import com.github.igorergin.ktsandroid.feature.auth.domain.LocalAuthManager
+import com.github.igorergin.ktsandroid.feature.auth.presentation.LocalAuthManager
+import io.github.aakira.napier.Napier
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 
@@ -50,7 +51,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
             error != null -> {
-                error.printStackTrace()
+                Napier.e(
+                    message = "Ошибка при получении OAuth ответа из Intent",
+                    throwable = error,
+                    tag = "Auth-Intent"
+                )
             }
         }
     }

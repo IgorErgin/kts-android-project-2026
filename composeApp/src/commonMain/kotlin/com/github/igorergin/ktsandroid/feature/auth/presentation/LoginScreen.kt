@@ -1,25 +1,48 @@
 package com.github.igorergin.ktsandroid.feature.auth.presentation
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.github.igorergin.ktsandroid.core.designsystem.components.AppButton
-import com.github.igorergin.ktsandroid.feature.auth.domain.LocalAuthManager
+import androidx.lifecycle.repeatOnLifecycle
+import com.github.igorergin.ktsandroid.core.designsystem.common.AppButton
+import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
+import com.github.igorergin.ktsandroid.feature.auth.domain.AuthManager
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 @Composable
 fun LoginScreen(
     onNavigateToMain: () -> Unit,
-    loginViewModel: LoginViewModel = viewModel { LoginViewModel() }
+    loginViewModel: LoginViewModel
 ) {
     val state by loginViewModel.state.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     // 1. Получаем кроссплатформенный менеджер авторизации
     val authManager = LocalAuthManager.current
@@ -27,16 +50,17 @@ fun LoginScreen(
     // 2. Подписываемся на получение кода авторизации с платформы (Android/iOS)
     LaunchedEffect(authManager) {
         authManager.authCodeFlow.collect { code ->
-            // Как только платформа поймала Intent и передала код, отправляем его во ViewModel
             loginViewModel.handleOAuthCode(code)
         }
     }
 
     // Подписка на одноразовые события навигации (успешный вход)
-    LaunchedEffect(Unit) {
-        loginViewModel.events.collect { event ->
-            when (event) {
-                is LoginUiEvent.LoginSuccessEvent -> onNavigateToMain()
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            loginViewModel.events.collect { event ->
+                when (event) {
+                    is LoginUiEvent.LoginSuccessEvent -> onNavigateToMain()
+                }
             }
         }
     }
@@ -86,6 +110,47 @@ fun LoginScreen(
                     text = if (state.isLoading) "Авторизация..." else "Войти с GitHub",
                     onClick = onLoginClick,
                     isLoading = state.isLoading
+                )
+            }
+        }
+    }
+}
+
+private class FakeAuthManager : AuthManager {
+    override val authCodeFlow = MutableSharedFlow<String>()
+    override fun launchAuthFlow() {}
+    override fun dispose() {}
+}
+
+@Preview
+@Composable
+private fun LoginScreenPreview() {
+    val fakeAuthManager = remember { FakeAuthManager() }
+
+    AppTheme {
+        CompositionLocalProvider(LocalAuthManager provides fakeAuthManager) {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                LoginScreen(
+                    onNavigateToMain = {},
+                    loginViewModel = LoginViewModel()
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun LoginScreenErrorPreview() {
+    val fakeAuthManager = remember { FakeAuthManager() }
+
+    AppTheme {
+        CompositionLocalProvider(LocalAuthManager provides fakeAuthManager) {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                LoginScreen(
+                    onNavigateToMain = {},
+                    loginViewModel = LoginViewModel().apply {
+                    }
                 )
             }
         }

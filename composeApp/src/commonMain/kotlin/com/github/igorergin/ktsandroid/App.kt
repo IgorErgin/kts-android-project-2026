@@ -1,6 +1,7 @@
 package com.github.igorergin.ktsandroid
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -10,21 +11,16 @@ import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.network.ktor3.KtorNetworkFetcherFactory
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
-import com.github.igorergin.ktsandroid.feature.onboarding.presentation.WelcomeScreen
-import com.github.igorergin.ktsandroid.feature.auth.presentation.LoginScreen
-import com.github.igorergin.ktsandroid.feature.repositories.presentation.MainScreen
-import com.github.igorergin.ktsandroid.feature.detail.presentation.DetailScreen
+import com.github.igorergin.ktsandroid.core.navigation.Destination
 import com.github.igorergin.ktsandroid.core.network.GithubAuthConfig
-import kotlinx.serialization.Serializable
+import com.github.igorergin.ktsandroid.feature.auth.presentation.LoginScreen
+import com.github.igorergin.ktsandroid.feature.auth.presentation.LoginViewModel
+import com.github.igorergin.ktsandroid.feature.detail.presentation.DetailScreen
+import com.github.igorergin.ktsandroid.feature.detail.presentation.DetailViewModel
+import com.github.igorergin.ktsandroid.feature.onboarding.presentation.WelcomeScreen
+import com.github.igorergin.ktsandroid.feature.repositories.presentation.MainScreen
+import com.github.igorergin.ktsandroid.feature.repositories.presentation.MainViewModel
 
-@Serializable
-object Welcome
-@Serializable
-data class Login(val code: String? = null)
-@Serializable
-object Main
-@Serializable
-data class Detail(val owner: String, val repo: String)
 
 @Composable
 fun App() {
@@ -34,34 +30,41 @@ fun App() {
     val navController = rememberNavController()
 
     AppTheme {
-        NavHost(navController = navController, startDestination = Welcome) {
-            composable<Welcome> { WelcomeScreen { navController.navigate(Login(null)) } }
+        NavHost(navController = navController, startDestination = Destination.Welcome) {
+            composable<Destination.Welcome> { WelcomeScreen { navController.navigate(
+                Destination.Login
+            ) } }
 
-            composable<Login>(
-                deepLinks = listOf(navDeepLink<Login>(basePath = GithubAuthConfig.REDIRECT_URI))
+            composable<Destination.Login>(
+                deepLinks = listOf(navDeepLink<Destination.Login>(basePath = GithubAuthConfig.REDIRECT_URI))
             ) { backStackEntry ->
-                val loginDest = backStackEntry.toRoute<Login>()
-
+                val vm: LoginViewModel = viewModel { LoginViewModel() }
                 LoginScreen(
+                    loginViewModel = vm,
                     onNavigateToMain = {
-                        navController.navigate(Main) {
-                            popUpTo(Welcome) { inclusive = true }
+                        navController.navigate(Destination.Main) {
+                            popUpTo(Destination.Welcome) { inclusive = true }
                         }
                     }
                 )
             }
 
-            composable<Main> {
-                MainScreen(onNavigateToDetail = { owner, repo ->
-                    navController.navigate(Detail(owner, repo))
-                })
+            composable<Destination.Main> {
+                val vm: MainViewModel = viewModel { MainViewModel() }
+                MainScreen(
+                    viewModel = vm,
+                    onNavigateToDetail = { owner, repo ->
+                        navController.navigate(Destination.Detail(owner, repo))
+                    })
             }
 
-            composable<Detail> { backStackEntry ->
-                val detailArgs = backStackEntry.toRoute<Detail>()
+            composable<Destination.Detail> { backStackEntry ->
+                val detailArgs = backStackEntry.toRoute<Destination.Detail>()
+                val vm: DetailViewModel =
+                    viewModel { DetailViewModel(detailArgs.owner, detailArgs.repo) }
                 DetailScreen(
-                    owner = detailArgs.owner,
-                    repo = detailArgs.repo,
+                    repoNameTitle = detailArgs.repo,
+                    vm = vm,
                     onBack = { navController.popBackStack() }
                 )
             }
