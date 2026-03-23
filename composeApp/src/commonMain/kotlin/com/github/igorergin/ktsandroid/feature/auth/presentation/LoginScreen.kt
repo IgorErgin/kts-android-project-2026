@@ -18,7 +18,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -33,8 +32,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.github.igorergin.ktsandroid.core.designsystem.common.AppButton
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
-import com.github.igorergin.ktsandroid.feature.auth.domain.AuthManager
-import kotlinx.coroutines.flow.MutableSharedFlow
+import ktsandroidproject.composeapp.generated.resources.Res
+import ktsandroidproject.composeapp.generated.resources.auth_with_github
+import ktsandroidproject.composeapp.generated.resources.login_description
+import ktsandroidproject.composeapp.generated.resources.login_title
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
+
 
 @Composable
 fun LoginScreen(
@@ -44,17 +48,14 @@ fun LoginScreen(
     val state by loginViewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // 1. Получаем кроссплатформенный менеджер авторизации
     val authManager = LocalAuthManager.current
 
-    // 2. Подписываемся на получение кода авторизации с платформы (Android/iOS)
     LaunchedEffect(authManager) {
         authManager.authCodeFlow.collect { code ->
             loginViewModel.handleOAuthCode(code)
         }
     }
 
-    // Подписка на одноразовые события навигации (успешный вход)
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             loginViewModel.events.collect { event ->
@@ -65,13 +66,23 @@ fun LoginScreen(
         }
     }
 
-    // 3. По клику делегируем открытие OAuth платформенному менеджеру
     val onLoginClick = remember {
         {
             authManager.launchAuthFlow()
         }
     }
 
+    LoginContent(
+        state = state,
+        onLoginClick = onLoginClick
+    )
+}
+
+@Composable
+fun LoginContent(
+    state: LoginUiState,
+    onLoginClick: () -> Unit
+) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -83,7 +94,7 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Вход через GitHub",
+                    text = stringResource(Res.string.login_description),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -95,7 +106,11 @@ fun LoginScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(bottom = 16.dp)
                     ) {
-                        Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = errorMsg,
@@ -107,7 +122,9 @@ fun LoginScreen(
                 }
 
                 AppButton(
-                    text = if (state.isLoading) "Авторизация..." else "Войти с GitHub",
+                    text = if (state.isLoading) stringResource(Res.string.login_title) else stringResource(
+                        Res.string.auth_with_github
+                    ),
                     onClick = onLoginClick,
                     isLoading = state.isLoading
                 )
@@ -116,25 +133,16 @@ fun LoginScreen(
     }
 }
 
-private class FakeAuthManager : AuthManager {
-    override val authCodeFlow = MutableSharedFlow<String>()
-    override fun launchAuthFlow() {}
-    override fun dispose() {}
-}
 
 @Preview
 @Composable
 private fun LoginScreenPreview() {
-    val fakeAuthManager = remember { FakeAuthManager() }
-
     AppTheme {
-        CompositionLocalProvider(LocalAuthManager provides fakeAuthManager) {
-            Surface(modifier = Modifier.fillMaxSize()) {
-                LoginScreen(
-                    onNavigateToMain = {},
-                    loginViewModel = LoginViewModel()
-                )
-            }
+        Surface(modifier = Modifier.fillMaxSize()) {
+            LoginContent(
+                state = LoginUiState(isLoading = false, error = null),
+                onLoginClick = {}
+            )
         }
     }
 }
@@ -142,17 +150,28 @@ private fun LoginScreenPreview() {
 @Preview
 @Composable
 private fun LoginScreenErrorPreview() {
-    val fakeAuthManager = remember { FakeAuthManager() }
-
     AppTheme {
-        CompositionLocalProvider(LocalAuthManager provides fakeAuthManager) {
-            Surface(modifier = Modifier.fillMaxSize()) {
-                LoginScreen(
-                    onNavigateToMain = {},
-                    loginViewModel = LoginViewModel().apply {
-                    }
-                )
-            }
+        Surface(modifier = Modifier.fillMaxSize()) {
+            LoginContent(
+                state = LoginUiState(
+                    isLoading = false,
+                    error = "Неверный логин или пароль. Попробуйте снова."
+                ),
+                onLoginClick = {}
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun LoginScreenLoadingPreview() {
+    AppTheme {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            LoginContent(
+                state = LoginUiState(isLoading = true, error = null),
+                onLoginClick = {}
+            )
         }
     }
 }

@@ -1,12 +1,31 @@
 package com.github.igorergin.ktsandroid.feature.repositories.presentation
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -16,39 +35,58 @@ import com.github.igorergin.ktsandroid.core.designsystem.common.AppTextField
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
 import com.github.igorergin.ktsandroid.feature.repositories.domain.model.GithubRepository
 import com.github.igorergin.ktsandroid.feature.repositories.presentation.components.RepositoryCard
+import ktsandroidproject.composeapp.generated.resources.Res
+import ktsandroidproject.composeapp.generated.resources.not_found
+import ktsandroidproject.composeapp.generated.resources.search_hint
+import org.jetbrains.compose.resources.stringResource
+
 
 @Composable
 fun MainScreen(
     onNavigateToDetail: (owner: String, repo: String) -> Unit,
-    viewModel: MainViewModel
+    onNavigateToProfile: () -> Unit,
+    viewModel: MainViewModel,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     MainContent(
         state = state,
         onNavigateToDetail = onNavigateToDetail,
+        onNavigateToProfile = onNavigateToProfile,
         onQueryChange = viewModel::onSearchQueryChanged,
-        onLoadNextPage = viewModel::loadNextPage
+        onListScrollPositionChanged = viewModel::onListScrollPositionChanged,
+        onRefresh = viewModel::forceRefresh
     )
 }
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainContent(
     state: MainUiState,
     onNavigateToDetail: (owner: String, repo: String) -> Unit,
+    onNavigateToProfile: () -> Unit,
     onQueryChange: (String) -> Unit,
-    onLoadNextPage: () -> Unit
+    onListScrollPositionChanged: (Int) -> Unit,
+    onRefresh: () -> Unit
 ) {
     Scaffold(
         topBar = {
-            Box(modifier = Modifier.padding(16.dp)) {
-                AppTextField(
-                    value = state.query,
-                    onValueChange = onQueryChange,
-                    label = "Поиск репозиториев...",
-                    trailingIcon = { Icon(Icons.Default.Search, null) }
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    AppTextField(
+                        value = state.query,
+                        onValueChange = onQueryChange,
+                        label = stringResource(Res.string.search_hint),
+                        trailingIcon = { Icon(Icons.Default.Search, null) }
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = onNavigateToProfile) {
+                    Icon(Icons.Default.Person, contentDescription = "Профиль")
+                }
             }
         }
     ) { padding ->
@@ -70,34 +108,40 @@ fun MainContent(
                     )
                 }
                 state.repositories.isEmpty() && !state.isLoading -> {
-                    Text("Ничего не найдено", style = MaterialTheme.typography.bodyLarge)
+                    Text(text = stringResource(Res.string.not_found), style = MaterialTheme.typography.bodyLarge)
                 }
                 else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    PullToRefreshBox(
+                        isRefreshing = state.isRefreshing,
+                        onRefresh = onRefresh,
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        itemsIndexed(
-                            items = state.repositories,
-                            key = { _, r -> r.id }
-                        ) { index, repo ->
-                            RepositoryCard(repo) {
-                                onNavigateToDetail(repo.ownerName, repo.name)
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            itemsIndexed(
+                                items = state.repositories,
+                                key = { _, r -> r.id }
+                            ) { index, repo ->
+                                RepositoryCard(repo) {
+                                    onNavigateToDetail(repo.ownerName, repo.name)
+                                }
+
+                                LaunchedEffect(index) {
+                                    onListScrollPositionChanged(index)
+                                }
                             }
 
-                            if (index == state.repositories.lastIndex && !state.isLoading) {
-                                LaunchedEffect(Unit) { onLoadNextPage() }
-                            }
-                        }
-
-                        if (state.isPaginating) {
-                            item {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            if (state.isPaginating) {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                    }
                                 }
                             }
                         }
@@ -108,6 +152,7 @@ fun MainContent(
     }
 }
 
+
 @Preview
 @Composable
 private fun MainScreenSuccessPreview() {
@@ -116,13 +161,33 @@ private fun MainScreenSuccessPreview() {
             state = MainUiState(
                 query = "Kotlin",
                 repositories = listOf(
-                    GithubRepository(1, "Kotlin", "JetBrains/Kotlin", "The Kotlin Programming Language", "Kotlin", 500, "JetBrains", ""),
-                    GithubRepository(2, "Compose", "JetBrains/Compose", "Compose Multiplatform UI framework", "Kotlin", 500, "JetBrains", "")
+                    GithubRepository(
+                        1,
+                        "Kotlin",
+                        "JetBrains/Kotlin",
+                        "The Kotlin Programming Language",
+                        "Kotlin",
+                        500,
+                        "JetBrains",
+                        ""
+                    ),
+                    GithubRepository(
+                        2,
+                        "Compose",
+                        "JetBrains/Compose",
+                        "Compose Multiplatform UI framework",
+                        "Kotlin",
+                        500,
+                        "JetBrains",
+                        ""
+                    )
                 )
             ),
             onNavigateToDetail = { _, _ -> },
+            onNavigateToProfile = {},
             onQueryChange = {},
-            onLoadNextPage = {}
+            onRefresh = {},
+            onListScrollPositionChanged = {}
         )
     }
 }
@@ -134,8 +199,10 @@ private fun MainScreenLoadingPreview() {
         MainContent(
             state = MainUiState(isLoading = true),
             onNavigateToDetail = { _, _ -> },
+            onNavigateToProfile = {},
             onQueryChange = {},
-            onLoadNextPage = {}
+            onListScrollPositionChanged = {},
+            onRefresh = {}
         )
     }
 }
@@ -147,13 +214,24 @@ private fun MainScreenPaginationPreview() {
         MainContent(
             state = MainUiState(
                 repositories = listOf(
-                    GithubRepository(1, "Kotlin", "JetBrains/Kotlin", "...", "kotlin", 500, "JetBrains", "")
+                    GithubRepository(
+                        1,
+                        "Kotlin",
+                        "JetBrains/Kotlin",
+                        "...",
+                        "kotlin",
+                        500,
+                        "JetBrains",
+                        ""
+                    )
                 ),
                 isPaginating = true
             ),
             onNavigateToDetail = { _, _ -> },
+            onNavigateToProfile = {},
             onQueryChange = {},
-            onLoadNextPage = {}
+            onListScrollPositionChanged = {},
+            onRefresh = {}
         )
     }
 }

@@ -1,34 +1,34 @@
 package com.github.igorergin.ktsandroid.feature.auth.data.repository
 
-import com.github.igorergin.ktsandroid.core.datastore.TokenStorage
-import com.github.igorergin.ktsandroid.core.network.GithubAuthClient
-import kotlinx.coroutines.CancellationException
+import com.github.igorergin.ktsandroid.core.datastore.TokenManager
+import com.github.igorergin.ktsandroid.core.network.safeApiCall
+import com.github.igorergin.ktsandroid.feature.auth.data.api.AuthApi
+import com.github.igorergin.ktsandroid.feature.repositories.domain.repository.GithubRepoRepository
 
-class GithubAuthRepository {
+class GithubAuthRepository(
+    private val authApi: AuthApi,
+    private val tokenManager: TokenManager,
+    private val githubRepoRepository: GithubRepoRepository
+) {
 
-    private val authClient: GithubAuthClient = GithubAuthClient()
-    private val tokenStorage: TokenStorage = TokenStorage
-    suspend fun exchangeCodeForToken(code: String): Result<String> {
-        return try {
-            val response = authClient.exchangeCodeForToken(code)
+    suspend fun exchangeCodeForToken(code: String): Result<String> = safeApiCall {
+        val response = authApi.exchangeCodeForToken(code)
 
-            if (response.error != null) {
-                return Result.failure(
-                    Exception(response.errorDescription ?: response.error)
-                )
-            }
-
-            if (response.accessToken != null) {
-                tokenStorage.saveToken(response.accessToken)
-                Result.success(response.accessToken)
-            } else {
-                Result.failure(Exception("Токен не был получен из ответа GitHub"))
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Result.failure(e)
+        if (response.error != null) {
+            throw Exception(response.errorDescription ?: response.error)
         }
 
+        val token = response.accessToken ?: throw Exception("Токен не был получен из ответа GitHub")
+
+        tokenManager.saveTokens(
+            accessToken = token,
+            refreshToken = response.refreshToken
+        )
+        token
+    }
+
+    suspend fun logout(): Result<Unit> = safeApiCall {
+        githubRepoRepository.clearLocalData()
+        tokenManager.clear()
     }
 }

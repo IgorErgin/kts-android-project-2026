@@ -52,7 +52,6 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WelcomeScreen(onNavigateToLogin: () -> Unit) {
-    // Данные для карусели
     val pages = remember {
         listOf(
             OnboardingPage(

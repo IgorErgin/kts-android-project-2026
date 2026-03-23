@@ -2,11 +2,10 @@ package com.github.igorergin.ktsandroid.core.navigation
 
 import kotlinx.serialization.Serializable
 
-
-/**
- * Базовый интерфейс для всех маршрутов приложения.
- */
 sealed interface Destination {
+
+    @Serializable
+    data object Splash : Destination
 
     @Serializable
     data object Welcome : Destination
@@ -17,10 +16,9 @@ sealed interface Destination {
     @Serializable
     data object Main : Destination
 
-    /**
-     * Маршрут с параметрами.
-     * Параметры автоматически сериализуются библиотекой навигации.
-     */
+    @Serializable
+    data object Profile : Destination
+
     @Serializable
     data class Detail(
         val owner: String,

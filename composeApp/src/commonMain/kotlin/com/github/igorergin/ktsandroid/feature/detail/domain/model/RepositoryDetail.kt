@@ -4,7 +4,7 @@ package com.github.igorergin.ktsandroid.feature.detail.domain.model
  * Расширенная модель деталей репозитория.
  */
 data class RepositoryDetail(
-    val id: Int,
+    val id: Long,
     val name: String,
     val fullName: String,
     val description: String,

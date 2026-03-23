@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 class DetailViewModel(
     private val owner: String,
     private val repo: String,
-    private val repository: DetailRepository = DetailRepository()
+    private val repository: DetailRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DetailUiState())
