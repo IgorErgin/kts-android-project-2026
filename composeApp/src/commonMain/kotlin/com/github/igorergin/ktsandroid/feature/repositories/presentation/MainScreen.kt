@@ -35,6 +35,11 @@ import com.github.igorergin.ktsandroid.core.designsystem.common.AppTextField
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
 import com.github.igorergin.ktsandroid.feature.repositories.domain.model.GithubRepository
 import com.github.igorergin.ktsandroid.feature.repositories.presentation.components.RepositoryCard
+import ktsandroidproject.composeapp.generated.resources.Res
+import ktsandroidproject.composeapp.generated.resources.not_found
+import ktsandroidproject.composeapp.generated.resources.search_hint
+import org.jetbrains.compose.resources.stringResource
+
 
 @Composable
 fun MainScreen(
@@ -49,7 +54,7 @@ fun MainScreen(
         onNavigateToDetail = onNavigateToDetail,
         onNavigateToProfile = onNavigateToProfile,
         onQueryChange = viewModel::onSearchQueryChanged,
-        onLoadNextPage = viewModel::loadNextPage,
+        onListScrollPositionChanged = viewModel::onListScrollPositionChanged,
         onRefresh = viewModel::forceRefresh
     )
 }
@@ -61,7 +66,7 @@ fun MainContent(
     onNavigateToDetail: (owner: String, repo: String) -> Unit,
     onNavigateToProfile: () -> Unit,
     onQueryChange: (String) -> Unit,
-    onLoadNextPage: () -> Unit,
+    onListScrollPositionChanged: (Int) -> Unit,
     onRefresh: () -> Unit
 ) {
     Scaffold(
@@ -74,7 +79,7 @@ fun MainContent(
                     AppTextField(
                         value = state.query,
                         onValueChange = onQueryChange,
-                        label = "Поиск репозиториев...",
+                        label = stringResource(Res.string.search_hint),
                         trailingIcon = { Icon(Icons.Default.Search, null) }
                     )
                 }
@@ -95,7 +100,6 @@ fun MainContent(
                 state.isLoading && state.repositories.isEmpty() -> {
                     CircularProgressIndicator()
                 }
-
                 state.error != null && state.repositories.isEmpty() -> {
                     Text(
                         text = state.error,
@@ -103,11 +107,9 @@ fun MainContent(
                         modifier = Modifier.padding(16.dp)
                     )
                 }
-
                 state.repositories.isEmpty() && !state.isLoading -> {
-                    Text("Ничего не найдено", style = MaterialTheme.typography.bodyLarge)
+                    Text(text = stringResource(Res.string.not_found), style = MaterialTheme.typography.bodyLarge)
                 }
-
                 else -> {
                     PullToRefreshBox(
                         isRefreshing = state.isRefreshing,
@@ -127,8 +129,8 @@ fun MainContent(
                                     onNavigateToDetail(repo.ownerName, repo.name)
                                 }
 
-                                if (index == state.repositories.lastIndex && !state.isLoading && !state.isPaginating && !state.isRefreshing) {
-                                    LaunchedEffect(Unit) { onLoadNextPage() }
+                                LaunchedEffect(index) {
+                                    onListScrollPositionChanged(index)
                                 }
                             }
 
@@ -182,10 +184,10 @@ private fun MainScreenSuccessPreview() {
                 )
             ),
             onNavigateToDetail = { _, _ -> },
-            onNavigateToProfile = {}, // Заглушка
+            onNavigateToProfile = {},
             onQueryChange = {},
-            onLoadNextPage = {},
-            onRefresh = {}
+            onRefresh = {},
+            onListScrollPositionChanged = {}
         )
     }
 }
@@ -197,9 +199,9 @@ private fun MainScreenLoadingPreview() {
         MainContent(
             state = MainUiState(isLoading = true),
             onNavigateToDetail = { _, _ -> },
-            onNavigateToProfile = {}, // Заглушка
+            onNavigateToProfile = {},
             onQueryChange = {},
-            onLoadNextPage = {},
+            onListScrollPositionChanged = {},
             onRefresh = {}
         )
     }
@@ -226,9 +228,9 @@ private fun MainScreenPaginationPreview() {
                 isPaginating = true
             ),
             onNavigateToDetail = { _, _ -> },
-            onNavigateToProfile = {}, // Заглушка
+            onNavigateToProfile = {},
             onQueryChange = {},
-            onLoadNextPage = {},
+            onListScrollPositionChanged = {},
             onRefresh = {}
         )
     }

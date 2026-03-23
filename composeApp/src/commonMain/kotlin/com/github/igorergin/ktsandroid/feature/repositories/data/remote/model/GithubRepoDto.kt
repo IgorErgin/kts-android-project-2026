@@ -3,13 +3,11 @@ package com.github.igorergin.ktsandroid.feature.repositories.data.remote.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-
 @Serializable
 data class GithubSearchResponse(
     @SerialName("total_count") val totalCount: Int? = 0,
     @SerialName("items") val items: List<GithubRepoDto>
 )
-
 
 @Serializable
 data class GithubRepoDto(
@@ -21,7 +19,6 @@ data class GithubRepoDto(
     @SerialName("language") val language: String? = null,
     @SerialName("owner") val owner: GithubOwnerDto
 )
-
 
 @Serializable
 data class GithubOwnerDto(

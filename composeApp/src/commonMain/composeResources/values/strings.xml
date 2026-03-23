@@ -1,17 +1,28 @@
 <resources>
     <string name="app_name">GitHub Explorer</string>
 
+    <!-- Общие -->
+    <string name="loading">Загрузка...</string>
+    <string name="error_prefix">Ошибка: %s</string>
+    <string name="back">Назад</string>
+    <string name="avatar_content_description">Аватар пользователя</string>
+
     <!-- Login Screen -->
     <string name="login_title">Авторизация</string>
+    <string name="login_description">Пожалуйста, войдите через GitHub, чтобы продолжить</string>
     <string name="login_label">Логин (Username)</string>
     <string name="password_label">Пароль / Token</string>
     <string name="login_button">Войти</string>
+    <string name="auth_with_github">Войти с GitHub</string>
     <string name="show_password">Показать пароль</string>
     <string name="hide_password">Скрыть пароль</string>
+    <string name="loading_auth">Авторизация...</string>
 
-    <!-- Welcome Screen -->
+    <!-- Welcome Screen / Onboarding -->
+    <string name="welcome_title">Добро пожаловать</string>
     <string name="welcome_next">Далее</string>
     <string name="welcome_skip">Пропустить</string>
+    <string name="get_started">Начать работу</string>
 
     <string name="onboarding_1_title">GitHub Explorer</string>
     <string name="onboarding_1_desc">Ваш мобильный клиент для удобной работы с репозиториями и кодом.</string>
@@ -21,7 +32,18 @@
 
     <string name="onboarding_3_title">Ваш профиль</string>
     <string name="onboarding_3_desc">Управляйте своими репозиториями и отслеживайте активность прямо с телефона.</string>
-    <string name="loading_auth">Авторизация...</string>
-    <string name="auth">Войти с GitHub</string>
 
+    <!-- Main Screen (Repositories) -->
+    <string name="search_hint">Поиск репозиториев...</string>
+    <string name="not_found">Ничего не найдено</string>
+    <string name="stars_count">Звезд</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_title">Профиль</string>
+    <string name="profile_logout">Выйти из аккаунта</string>
+    <string name="profile_bio_empty">Биография не указана</string>
+
+    <!-- Details Screen -->
+    <string name="details_title">Детали репозитория</string>
+    <string name="details_language">Язык</string>
 </resources>

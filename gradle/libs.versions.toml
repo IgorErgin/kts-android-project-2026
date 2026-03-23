@@ -23,12 +23,14 @@ kotlinxSerialization = "1.10.0"
 ktor = "3.0.0"
 buildkonfig = "0.17.1"
 roomRuntime = "2.8.4"
+securityCryptoKtx = "1.1.0"
 sqliteBundled = "2.5.0-alpha11"
 
 [libraries]
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+androidx-security-crypto-ktx = { module = "androidx.security:security-crypto-ktx", version.ref = "securityCryptoKtx" }
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqliteBundled" }
 appauth = { module = "net.openid:appauth", version.ref = "appauth" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil3" }

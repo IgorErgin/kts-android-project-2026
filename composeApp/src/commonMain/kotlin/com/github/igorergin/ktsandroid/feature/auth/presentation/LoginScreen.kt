@@ -32,6 +32,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.github.igorergin.ktsandroid.core.designsystem.common.AppButton
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
+import ktsandroidproject.composeapp.generated.resources.Res
+import ktsandroidproject.composeapp.generated.resources.auth_with_github
+import ktsandroidproject.composeapp.generated.resources.login_description
+import ktsandroidproject.composeapp.generated.resources.login_title
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 
 @Composable
@@ -71,6 +77,7 @@ fun LoginScreen(
         onLoginClick = onLoginClick
     )
 }
+
 @Composable
 fun LoginContent(
     state: LoginUiState,
@@ -87,7 +94,7 @@ fun LoginContent(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Вход через GitHub",
+                    text = stringResource(Res.string.login_description),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -99,7 +106,11 @@ fun LoginContent(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(bottom = 16.dp)
                     ) {
-                        Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = errorMsg,
@@ -111,7 +122,9 @@ fun LoginContent(
                 }
 
                 AppButton(
-                    text = if (state.isLoading) "Авторизация..." else "Войти с GitHub",
+                    text = if (state.isLoading) stringResource(Res.string.login_title) else stringResource(
+                        Res.string.auth_with_github
+                    ),
                     onClick = onLoginClick,
                     isLoading = state.isLoading
                 )

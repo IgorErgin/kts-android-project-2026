@@ -45,6 +45,10 @@ import com.github.igorergin.ktsandroid.core.designsystem.common.AppErrorState
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
 import com.github.igorergin.ktsandroid.core.designsystem.theme.GitHubTextSecondary
 import com.github.igorergin.ktsandroid.feature.detail.domain.model.RepositoryDetail
+import ktsandroidproject.composeapp.generated.resources.Res
+import ktsandroidproject.composeapp.generated.resources.details_language
+import ktsandroidproject.composeapp.generated.resources.stars_count
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun DetailScreen(
@@ -62,9 +66,7 @@ fun DetailScreen(
     )
 }
 
-/**
- * Stateless-версия: только верстка.
- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailContent(
@@ -153,8 +155,8 @@ fun DetailContent(
                                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
-                                    StatItem("Stars", repository.starsCount.toString(), Icons.Default.Star)
-                                    StatItem("Language", repository.language ?: "N/A", null)
+                                    StatItem(stringResource(Res.string.stars_count), repository.starsCount.toString(), Icons.Default.Star)
+                                    StatItem(stringResource(Res.string.details_language ), repository.language ?: "N/A", null)
                                 }
                             }
 

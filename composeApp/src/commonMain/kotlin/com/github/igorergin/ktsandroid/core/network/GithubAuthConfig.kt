@@ -14,7 +14,5 @@ object GithubAuthConfig {
 
     const val AUTH_ENDPOINT = "https://github.com/login/oauth/authorize"
     const val TOKEN_ENDPOINT = "https://github.com/login/oauth/access_token"
-
-    // Права доступа (scopes)
     const val SCOPES = "user,repo,gist"
 }

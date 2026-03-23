@@ -28,7 +28,7 @@ class GithubRepoRepositoryImpl(
         forceRefresh: Boolean
     ): Flow<List<GithubRepository>> = flow {
 
-        Napier.d("Starting search: query=$query, page=$page, forceRefresh=$forceRefresh", tag = TAG)
+        Napier.i("Starting search: query=$query, page=$page", tag = TAG)
 
         if (page == 1) {
             val cachedRepos = repositoryDao.getAllRepositories().map { it.toDomain() }
@@ -47,7 +47,6 @@ class GithubRepoRepositoryImpl(
             }.body()
 
             val networkEntities = response.items.map { it.toEntity() }
-            Napier.d("Network received ${networkEntities.size} items", tag = TAG)
 
             if (forceRefresh || page == 1) {
                 Napier.i("Clearing old cache for a fresh start", tag = TAG)
@@ -55,7 +54,6 @@ class GithubRepoRepositoryImpl(
             }
 
             repositoryDao.insertRepositories(networkEntities)
-            Napier.d("Saved items to database", tag = TAG)
 
             val finalData = repositoryDao.getAllRepositories().map { it.toDomain() }
             emit(finalData)
@@ -68,7 +66,7 @@ class GithubRepoRepositoryImpl(
                     Napier.w("No cache available after network error. Propagating exception.", tag = TAG)
                     throw e
                 } else {
-                    Napier.i("Network failed, but user sees cached data.", tag = TAG)
+                    Napier.w("Network failed, but user sees cached data.", tag = TAG)
                 }
             } else {
                 throw e
@@ -77,7 +75,7 @@ class GithubRepoRepositoryImpl(
     }
 
     override suspend fun clearLocalData() {
-        Napier.w("Clearing all local repository data (Logout/Reset)", tag = TAG)
+        Napier.i("Clearing all local repository data (Logout/Reset)", tag = TAG)
         repositoryDao.clearAll()
     }
 }

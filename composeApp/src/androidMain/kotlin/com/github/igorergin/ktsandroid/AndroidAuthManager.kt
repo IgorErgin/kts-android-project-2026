@@ -37,7 +37,6 @@ class AndroidAuthManager(private val context: Context) : AuthManager {
             .setCodeVerifier(null)
             .build()
 
-        // Очищаем предыдущий сервис, если он был
         authService?.dispose()
         val currentService = AuthorizationService(context)
         authService = currentService

@@ -2,9 +2,8 @@ package com.github.igorergin.ktsandroid.feature.profile.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.igorergin.ktsandroid.core.datastore.TokenManager
+import com.github.igorergin.ktsandroid.feature.auth.data.repository.GithubAuthRepository
 import com.github.igorergin.ktsandroid.feature.profile.data.repository.ProfileRepository
-import com.github.igorergin.ktsandroid.feature.repositories.domain.repository.GithubRepoRepository
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,8 +13,7 @@ import kotlinx.coroutines.launch
 
 class ProfileViewModel(
     private val profileRepository: ProfileRepository,
-    private val tokenManager: TokenManager,
-    private val githubRepoRepository: GithubRepoRepository // Нужен для очистки Room
+    private val authRepository: GithubAuthRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileUiState())
@@ -28,32 +26,25 @@ class ProfileViewModel(
     private fun loadProfile() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            try {
-                val user = profileRepository.getCurrentUser()
-                _state.update { it.copy(profile = user, isLoading = false) }
-            } catch (e: Exception) {
-                Napier.e("Failed to load profile", e)
-                _state.update { it.copy(isLoading = false, error = e.message) }
-            }
+
+            profileRepository.getCurrentUser()
+                .onSuccess { user ->
+                    _state.update { it.copy(profile = user, isLoading = false) }
+                }
+                .onFailure { e ->
+                    Napier.e("Failed to load profile", e)
+                    _state.update { it.copy(isLoading = false, error = e.message) }
+                }
         }
     }
 
-
     fun logout(onLogoutComplete: () -> Unit) {
         viewModelScope.launch {
-            try {
-                githubRepoRepository.clearLocalData()
+            authRepository.logout()
+                .onSuccess { Napier.i("Logout successful") }
+                .onFailure { Napier.e("Error during logout", it) }
 
-                tokenManager.clear()
-
-                Napier.i("Logout successful. All local data cleared.")
-
-                onLogoutComplete()
-            } catch (e: Exception) {
-                Napier.e("Error during logout", e)
-                tokenManager.clear()
-                onLogoutComplete()
-            }
+            onLogoutComplete()
         }
     }
 }

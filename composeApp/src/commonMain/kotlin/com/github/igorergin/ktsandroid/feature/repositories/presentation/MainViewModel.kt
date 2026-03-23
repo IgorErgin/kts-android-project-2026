@@ -42,9 +42,15 @@ class MainViewModel(
         loadData(isRefresh = true)
     }
 
-    fun loadNextPage() {
-        if (_state.value.isPaginating || _state.value.isLoading) return
-        loadData(isPagination = true)
+    fun onListScrollPositionChanged(index: Int) {
+        val currentState = _state.value
+        if (index == currentState.repositories.lastIndex &&
+            !currentState.isLoading &&
+            !currentState.isPaginating &&
+            !currentState.isRefreshing
+        ) {
+            loadData(isPagination = true)
+        }
     }
 
     private fun loadData(isRefresh: Boolean = false, isPagination: Boolean = false) {

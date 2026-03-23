@@ -35,6 +35,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.github.igorergin.ktsandroid.core.designsystem.theme.GitHubTextSecondary
+import com.github.igorergin.ktsandroid.feature.profile.domain.model.UserProfile
+import ktsandroidproject.composeapp.generated.resources.Res
+import ktsandroidproject.composeapp.generated.resources.error_prefix
+import ktsandroidproject.composeapp.generated.resources.profile_logout
+import ktsandroidproject.composeapp.generated.resources.profile_title
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +54,7 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Профиль") },
+                title = { Text(stringResource(Res.string.profile_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
@@ -64,72 +70,86 @@ fun ProfileScreen(
                 }
                 state.error != null -> {
                     Text(
-                        text = "Ошибка: ${state.error}",
+                        text = "${stringResource(Res.string.error_prefix)} ${state.error}",
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.align(Alignment.Center).padding(16.dp)
                     )
                 }
                 state.profile != null -> {
-                    val profile = state.profile!!
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Аватарка
-                        AsyncImage(
-                            model = profile.avatarUrl,
-                            contentDescription = "Avatar",
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Имя и логин
-                        Text(
-                            text = profile.name ?: profile.login,
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "@${profile.login}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = GitHubTextSecondary
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Био (если есть)
-                        if (!profile.bio.isNullOrBlank()) {
-                            Text(
-                                text = profile.bio,
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        // Кнопка выхода
-                        Button(
-                            onClick = { viewModel.logout(onLogoutComplete = onNavigateToLogin) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
-                            ),
-                            modifier = Modifier.fillMaxWidth().height(50.dp)
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Выйти из аккаунта", style = MaterialTheme.typography.titleMedium)
-                        }
-                    }
+                    ProfileContent(
+                        profile = state.profile!!,
+                        onLogout = { viewModel.logout(onLogoutComplete = onNavigateToLogin) }
+                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ProfileContent(profile: UserProfile, onLogout: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        ProfileAvatar(url = profile.avatarUrl)
+        Spacer(modifier = Modifier.height(16.dp))
+        ProfileInfo(name = profile.name ?: profile.login, login = profile.login, bio = profile.bio)
+        Spacer(modifier = Modifier.weight(1f))
+        LogoutButton(onLogout = onLogout)
+    }
+}
+
+@Composable
+private fun ProfileAvatar(url: String) {
+    AsyncImage(
+        model = url,
+        contentDescription = "Avatar",
+        modifier = Modifier
+            .size(120.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+    )
+}
+
+@Composable
+private fun ProfileInfo(name: String, login: String, bio: String?) {
+    Text(
+        text = name,
+        style = MaterialTheme.typography.headlineMedium,
+        fontWeight = FontWeight.Bold
+    )
+    Text(
+        text = "@$login",
+        style = MaterialTheme.typography.titleMedium,
+        color = GitHubTextSecondary
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    if (!bio.isNullOrBlank()) {
+        Text(
+            text = bio,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+    }
+}
+
+@Composable
+private fun LogoutButton(onLogout: () -> Unit) {
+    Button(
+        onClick = onLogout,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.error
+        ),
+        modifier = Modifier.fillMaxWidth().height(50.dp)
+    ) {
+        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(stringResource(Res.string.profile_logout), style = MaterialTheme.typography.titleMedium)
     }
 }

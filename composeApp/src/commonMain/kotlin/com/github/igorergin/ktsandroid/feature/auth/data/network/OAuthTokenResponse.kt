@@ -9,7 +9,6 @@ data class OAuthTokenResponse(
     @SerialName("refresh_token") val refreshToken: String? = null,
     @SerialName("token_type") val tokenType: String? = null,
     @SerialName("scope") val scope: String? = null,
-
     @SerialName("error") val error: String? = null,
     @SerialName("error_description") val errorDescription: String? = null
 )

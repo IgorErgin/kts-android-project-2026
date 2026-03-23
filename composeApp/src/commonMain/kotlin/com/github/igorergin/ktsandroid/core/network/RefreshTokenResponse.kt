@@ -3,7 +3,6 @@ package com.github.igorergin.ktsandroid.core.network
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-// DTO для ответа при обновлении токена
 @Serializable
 data class RefreshTokenResponse(
     @SerialName("access_token") val accessToken: String,
