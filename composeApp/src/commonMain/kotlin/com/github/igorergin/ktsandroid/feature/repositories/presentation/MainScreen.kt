@@ -1,45 +1,27 @@
 package com.github.igorergin.ktsandroid.feature.repositories.presentation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.igorergin.ktsandroid.core.designsystem.common.AppTextField
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
 import com.github.igorergin.ktsandroid.feature.repositories.domain.model.GithubRepository
 import com.github.igorergin.ktsandroid.feature.repositories.presentation.components.RepositoryCard
 import ktsandroidproject.composeapp.generated.resources.Res
-import ktsandroidproject.composeapp.generated.resources.not_found
 import ktsandroidproject.composeapp.generated.resources.search_hint
 import org.jetbrains.compose.resources.stringResource
-
 
 @Composable
 fun MainScreen(
@@ -51,11 +33,8 @@ fun MainScreen(
 
     MainContent(
         state = state,
-        onNavigateToDetail = onNavigateToDetail,
-        onNavigateToProfile = onNavigateToProfile,
-        onQueryChange = viewModel::onSearchQueryChanged,
-        onListScrollPositionChanged = viewModel::onListScrollPositionChanged,
-        onRefresh = viewModel::forceRefresh
+        onIntent = viewModel::handleIntent,
+        onNavigateToDetail = onNavigateToDetail
     )
 }
 
@@ -63,57 +42,33 @@ fun MainScreen(
 @Composable
 fun MainContent(
     state: MainUiState,
-    onNavigateToDetail: (owner: String, repo: String) -> Unit,
-    onNavigateToProfile: () -> Unit,
-    onQueryChange: (String) -> Unit,
-    onListScrollPositionChanged: (Int) -> Unit,
-    onRefresh: () -> Unit
+    onIntent: (MainIntent) -> Unit,
+    onNavigateToDetail: (owner: String, repo: String) -> Unit
 ) {
     Scaffold(
         topBar = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    AppTextField(
-                        value = state.query,
-                        onValueChange = onQueryChange,
-                        label = stringResource(Res.string.search_hint),
-                        trailingIcon = { Icon(Icons.Default.Search, null) }
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = onNavigateToProfile) {
-                    Icon(Icons.Default.Person, contentDescription = "Профиль")
-                }
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                AppTextField(
+                    value = state.query,
+                    onValueChange = { onIntent(MainIntent.SearchQueryChanged(it)) },
+                    label = stringResource(Res.string.search_hint),
+                    trailingIcon = { Icon(Icons.Default.Search, null) }
+                )
             }
         }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when {
                 state.isLoading && state.repositories.isEmpty() -> {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
                 state.error != null && state.repositories.isEmpty() -> {
-                    Text(
-                        text = state.error,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-                state.repositories.isEmpty() && !state.isLoading -> {
-                    Text(text = stringResource(Res.string.not_found), style = MaterialTheme.typography.bodyLarge)
+                    Text(state.error, color = MaterialTheme.colorScheme.error, modifier = Modifier.align(Alignment.Center))
                 }
                 else -> {
                     PullToRefreshBox(
                         isRefreshing = state.isRefreshing,
-                        onRefresh = onRefresh,
+                        onRefresh = { onIntent(MainIntent.Refresh) },
                         modifier = Modifier.fillMaxSize()
                     ) {
                         LazyColumn(
@@ -121,26 +76,25 @@ fun MainContent(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            itemsIndexed(
-                                items = state.repositories,
-                                key = { _, r -> r.id }
-                            ) { index, repo ->
-                                RepositoryCard(repo) {
-                                    onNavigateToDetail(repo.ownerName, repo.name)
-                                }
+                            itemsIndexed(state.repositories, key = { _, r -> r.id }) { index, repo ->
+                                RepositoryCard(
+                                    repo = repo,
+                                    onClick = { onNavigateToDetail(repo.ownerName, repo.name) },
+                                    onFavoriteClick = { onIntent(MainIntent.ToggleFavorite(repo)) }
+                                )
 
-                                LaunchedEffect(index) {
-                                    onListScrollPositionChanged(index)
+                                // Пагинация
+                                if (index == state.repositories.lastIndex) {
+                                    LaunchedEffect(Unit) {
+                                        onIntent(MainIntent.LoadNextPage)
+                                    }
                                 }
                             }
 
                             if (state.isPaginating) {
                                 item {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                    Box(Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator(Modifier.size(24.dp))
                                     }
                                 }
                             }
@@ -152,86 +106,43 @@ fun MainContent(
     }
 }
 
-
 @Preview
 @Composable
-private fun MainScreenSuccessPreview() {
+private fun MainSuccessPreview() {
     AppTheme {
         MainContent(
             state = MainUiState(
-                query = "Kotlin",
                 repositories = listOf(
-                    GithubRepository(
-                        1,
-                        "Kotlin",
-                        "JetBrains/Kotlin",
-                        "The Kotlin Programming Language",
-                        "Kotlin",
-                        500,
-                        "JetBrains",
-                        ""
-                    ),
-                    GithubRepository(
-                        2,
-                        "Compose",
-                        "JetBrains/Compose",
-                        "Compose Multiplatform UI framework",
-                        "Kotlin",
-                        500,
-                        "JetBrains",
-                        ""
-                    )
+                    GithubRepository(1, "Kotlin", "JetBrains/Kotlin", "Language", "Kotlin", 1000, "JetBrains", ""),
+                    GithubRepository(2, "Compose", "JetBrains/Compose", "UI kit", "Kotlin", 500, "JetBrains", "")
                 )
             ),
-            onNavigateToDetail = { _, _ -> },
-            onNavigateToProfile = {},
-            onQueryChange = {},
-            onRefresh = {},
-            onListScrollPositionChanged = {}
+            onIntent = {},
+            onNavigateToDetail = { _, _ -> }
         )
     }
 }
 
 @Preview
 @Composable
-private fun MainScreenLoadingPreview() {
-    AppTheme {
+private fun MainLoadingPreview() {
+    AppTheme(darkTheme = true) {
         MainContent(
             state = MainUiState(isLoading = true),
-            onNavigateToDetail = { _, _ -> },
-            onNavigateToProfile = {},
-            onQueryChange = {},
-            onListScrollPositionChanged = {},
-            onRefresh = {}
+            onIntent = {},
+            onNavigateToDetail = { _, _ -> }
         )
     }
 }
 
 @Preview
 @Composable
-private fun MainScreenPaginationPreview() {
+private fun MainErrorPreview() {
     AppTheme {
         MainContent(
-            state = MainUiState(
-                repositories = listOf(
-                    GithubRepository(
-                        1,
-                        "Kotlin",
-                        "JetBrains/Kotlin",
-                        "...",
-                        "kotlin",
-                        500,
-                        "JetBrains",
-                        ""
-                    )
-                ),
-                isPaginating = true
-            ),
-            onNavigateToDetail = { _, _ -> },
-            onNavigateToProfile = {},
-            onQueryChange = {},
-            onListScrollPositionChanged = {},
-            onRefresh = {}
+            state = MainUiState(error = "Ошибка подключения к сети"),
+            onIntent = {},
+            onNavigateToDetail = { _, _ -> }
         )
     }
 }

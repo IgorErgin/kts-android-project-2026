@@ -1,0 +1,15 @@
+#!/bin/bash
+
+echo "🚀 Запуск статического анализа (Detekt)..."
+
+./gradlew detekt
+
+status=$?
+
+if [ $status -ne 0 ]; then
+    echo "❌ Ошибка Detekt! Исправьте замечания перед комитом."
+    exit $status
+fi
+
+echo "✅ Проверка пройдена успешно. Комитим..."
+exit 0

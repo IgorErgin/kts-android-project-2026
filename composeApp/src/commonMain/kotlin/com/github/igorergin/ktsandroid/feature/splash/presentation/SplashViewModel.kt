@@ -5,9 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.github.igorergin.ktsandroid.core.datastore.AppSettings
 import com.github.igorergin.ktsandroid.core.datastore.TokenManager
 import com.github.igorergin.ktsandroid.core.navigation.Destination
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class SplashViewModel(
@@ -15,7 +16,11 @@ class SplashViewModel(
     private val tokenManager: TokenManager
 ) : ViewModel() {
 
-    private val _navigationEvent = MutableSharedFlow<Destination>()
+
+    private val _navigationEvent = MutableSharedFlow<Destination>(
+        replay = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     init {
@@ -24,15 +29,21 @@ class SplashViewModel(
 
     private fun determineStartDestination() {
         viewModelScope.launch {
-            tokenManager.initToken()
-            val isFirstLaunch = appSettings.isFirstLaunchFlow.firstOrNull() ?: true
+            try {
+                tokenManager.initToken()
 
-            val dest = when {
-                isFirstLaunch -> Destination.Welcome
-                tokenManager.isLoggedIn() -> Destination.Main
-                else -> Destination.Login
+                val isFirstLaunch = appSettings.isFirstLaunchFlow.first()
+
+                val dest = when {
+                    isFirstLaunch -> Destination.Welcome
+                    tokenManager.isLoggedIn() -> Destination.MainContainer
+                    else -> Destination.Login
+                }
+
+                _navigationEvent.emit(dest)
+            } catch (e: Exception) {
+                _navigationEvent.emit(Destination.Welcome)
             }
-            _navigationEvent.emit(dest)
         }
     }
 }

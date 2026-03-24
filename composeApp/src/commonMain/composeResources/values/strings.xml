@@ -3,9 +3,11 @@
 
     <!-- Общие -->
     <string name="loading">Загрузка...</string>
-    <string name="error_prefix">Ошибка: %s</string>
+    <string name="error_prefix">Ошибка: </string>
     <string name="back">Назад</string>
     <string name="avatar_content_description">Аватар пользователя</string>
+    <string name="retry">Повторить</string>
+
 
     <!-- Login Screen -->
     <string name="login_title">Авторизация</string>
@@ -33,6 +35,10 @@
     <string name="onboarding_3_title">Ваш профиль</string>
     <string name="onboarding_3_desc">Управляйте своими репозиториями и отслеживайте активность прямо с телефона.</string>
 
+    <string name="tab_search">Поиск</string>
+    <string name="tab_favorites">Избранное</string>
+    <string name="tab_profile">Профиль</string>
+
     <!-- Main Screen (Repositories) -->
     <string name="search_hint">Поиск репозиториев...</string>
     <string name="not_found">Ничего не найдено</string>
@@ -46,4 +52,15 @@
     <!-- Details Screen -->
     <string name="details_title">Детали репозитория</string>
     <string name="details_language">Язык</string>
+    <string name="readme_title">README</string>
+    <string name="create_issue">Создать Issue</string>
+    <string name="no_data">Нет данных</string>
+    <string name="header">Заголовок</string>
+    <string name="description">Описание</string>
+    <string name="share">Поделиться</string>
+    <string name="decline">Отмена</string>
+
+    <!-- Faborites Screen -->
+    <string name="no_favorites">У вас пока нет избранных репозиториев</string>
+
 </resources>

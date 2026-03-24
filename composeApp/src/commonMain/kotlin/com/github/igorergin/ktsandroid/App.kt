@@ -2,7 +2,6 @@ package com.github.igorergin.ktsandroid
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -12,36 +11,26 @@ import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.network.ktor3.KtorNetworkFetcherFactory
 import com.github.igorergin.ktsandroid.core.datastore.AppSettings
-import com.github.igorergin.ktsandroid.core.datastore.TokenManager
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
 import com.github.igorergin.ktsandroid.core.navigation.Destination
 import com.github.igorergin.ktsandroid.core.network.GithubAuthConfig
-import com.github.igorergin.ktsandroid.feature.auth.data.repository.GithubAuthRepository
 import com.github.igorergin.ktsandroid.feature.auth.presentation.LoginScreen
 import com.github.igorergin.ktsandroid.feature.auth.presentation.LoginViewModel
-import com.github.igorergin.ktsandroid.feature.detail.data.repository.DetailRepository
 import com.github.igorergin.ktsandroid.feature.detail.presentation.DetailScreen
 import com.github.igorergin.ktsandroid.feature.detail.presentation.DetailViewModel
+import com.github.igorergin.ktsandroid.feature.main.MainContainerScreen
 import com.github.igorergin.ktsandroid.feature.onboarding.presentation.WelcomeScreen
-import com.github.igorergin.ktsandroid.feature.profile.data.repository.ProfileRepository
-import com.github.igorergin.ktsandroid.feature.profile.presentation.ProfileScreen
-import com.github.igorergin.ktsandroid.feature.profile.presentation.ProfileViewModel
-import com.github.igorergin.ktsandroid.feature.repositories.domain.repository.GithubRepoRepository
-import com.github.igorergin.ktsandroid.feature.repositories.presentation.MainScreen
-import com.github.igorergin.ktsandroid.feature.repositories.presentation.MainViewModel
 import com.github.igorergin.ktsandroid.feature.splash.presentation.SplashScreen
 import com.github.igorergin.ktsandroid.feature.splash.presentation.SplashViewModel
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
-fun App(
-    appSettings: AppSettings,
-    tokenManager: TokenManager,
-    githubRepoRepository: GithubRepoRepository,
-    profileRepository: ProfileRepository,
-    githubAuthRepository: GithubAuthRepository,
-    detailRepository: DetailRepository
-) {
+fun App() {
+    val appSettings: AppSettings = koinInject()
+
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context)
             .components { add(KtorNetworkFetcherFactory()) }
@@ -55,7 +44,7 @@ fun App(
         NavHost(navController = navController, startDestination = Destination.Splash) {
 
             composable<Destination.Splash> {
-                val vm: SplashViewModel = viewModel { SplashViewModel(appSettings, tokenManager) }
+                val vm: SplashViewModel = koinViewModel()
                 SplashScreen(
                     viewModel = vm,
                     onNavigate = { dest ->
@@ -80,54 +69,39 @@ fun App(
             composable<Destination.Login>(
                 deepLinks = listOf(navDeepLink<Destination.Login>(basePath = GithubAuthConfig.REDIRECT_URI))
             ) {
-                val vm: LoginViewModel = viewModel { LoginViewModel(githubAuthRepository) }
+                val vm: LoginViewModel = koinViewModel()
                 LoginScreen(
                     loginViewModel = vm,
                     onNavigateToMain = {
-                        navController.navigate(Destination.Main) {
+                        navController.navigate(Destination.MainContainer) {
                             popUpTo(0) { inclusive = true }
                         }
                     }
                 )
             }
 
-            composable<Destination.Main> {
-                val vm: MainViewModel = viewModel { MainViewModel(githubRepoRepository) }
-                MainScreen(
-                    viewModel = vm,
+            composable<Destination.MainContainer> {
+                MainContainerScreen(
                     onNavigateToDetail = { owner, repo ->
                         navController.navigate(Destination.Detail(owner, repo))
                     },
-                    onNavigateToProfile = {
-                        navController.navigate(Destination.Profile)
+                    onNavigateToLogin = {
+                        navController.navigate(Destination.Login) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 )
             }
 
             composable<Destination.Detail> { backStackEntry ->
                 val detailArgs = backStackEntry.toRoute<Destination.Detail>()
-                val vm: DetailViewModel = viewModel {
-                    DetailViewModel(detailArgs.owner, detailArgs.repo, detailRepository)
-                }
+                val vm: DetailViewModel = koinViewModel(
+                    parameters = { parametersOf(detailArgs.owner, detailArgs.repo) }
+                )
                 DetailScreen(
                     repoNameTitle = detailArgs.repo,
                     vm = vm,
                     onBack = { navController.popBackStack() }
-                )
-            }
-
-            composable<Destination.Profile> {
-                val vm: ProfileViewModel = viewModel {
-                    ProfileViewModel(profileRepository, githubAuthRepository)
-                }
-                ProfileScreen(
-                    viewModel = vm,
-                    onBack = { navController.popBackStack() },
-                    onNavigateToLogin = {
-                        navController.navigate(Destination.Login) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
                 )
             }
         }
