@@ -24,8 +24,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -191,7 +191,7 @@ fun RepositoryInfo(repo: RepositoryDetail, readme: String?, isReadmeLoading: Boo
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.fillMaxWidth()
         )
-        Divider(Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
         if (isReadmeLoading) {
             CircularProgressIndicator(modifier = Modifier.size(30.dp).padding(top = 16.dp))

@@ -1,5 +1,8 @@
 package com.github.igorergin.ktsandroid.di
 
+import com.github.igorergin.ktsandroid.core.database.DatabaseFactory
+import com.github.igorergin.ktsandroid.core.datastore.AppSettings
+import com.github.igorergin.ktsandroid.core.datastore.TokenManager
 import com.github.igorergin.ktsandroid.core.network.NetworkClient
 import com.github.igorergin.ktsandroid.core.util.AppDispatchers
 import com.github.igorergin.ktsandroid.core.util.AppDispatchersImpl
@@ -14,6 +17,7 @@ import com.github.igorergin.ktsandroid.feature.detail.domain.usecase.GetReposito
 import com.github.igorergin.ktsandroid.feature.detail.presentation.DetailViewModel
 import com.github.igorergin.ktsandroid.feature.profile.data.repository.ProfileRepository
 import com.github.igorergin.ktsandroid.feature.profile.presentation.ProfileViewModel
+import com.github.igorergin.ktsandroid.feature.repositories.data.local.AppDatabase
 import com.github.igorergin.ktsandroid.feature.repositories.data.repository.GithubRepoRepositoryImpl
 import com.github.igorergin.ktsandroid.feature.repositories.domain.repository.GithubRepoRepository
 import com.github.igorergin.ktsandroid.feature.repositories.domain.usecase.GetFavoritesUseCase
@@ -22,6 +26,7 @@ import com.github.igorergin.ktsandroid.feature.repositories.domain.usecase.Toggl
 import com.github.igorergin.ktsandroid.feature.repositories.presentation.MainViewModel
 import com.github.igorergin.ktsandroid.feature.repositories.presentation.favorites.FavoritesViewModel
 import com.github.igorergin.ktsandroid.feature.splash.presentation.SplashViewModel
+import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -31,11 +36,18 @@ import org.koin.dsl.module
 
 val coreModule = module {
     singleOf(::AppDispatchersImpl) bind AppDispatchers::class
+    single { AppSettings(get()) }
+    single { TokenManager(get()) }
 
     // Сеть
     single(named("unauthenticated")) { NetworkClient.unauthenticatedClient }
     single<AuthApi> { AuthApiImpl(get(named("unauthenticated"))) }
     single { NetworkClient.createHttpClient(get(), get()) }
+}
+
+val databaseModule = module {
+    single { get<DatabaseFactory>().createBuilder().build() }
+    single { get<AppDatabase>().repositoryDao() }
 }
 
 val repositoryModule = module {
@@ -46,12 +58,9 @@ val repositoryModule = module {
 }
 
 val useCaseModule = module {
-    // Репозитории
     factoryOf(::SearchRepositoriesUseCase)
     factoryOf(::ToggleFavoriteUseCase)
     factoryOf(::GetFavoritesUseCase)
-
-    // Детализация
     factoryOf(::GetRepositoryDetailsUseCase)
     factoryOf(::GetReadmeUseCase)
     factoryOf(::CreateIssueUseCase)
@@ -77,4 +86,10 @@ val viewModelModule = module {
     }
 }
 
-fun appModules() = listOf(coreModule, repositoryModule, useCaseModule, viewModelModule)
+fun appModules(platformModules: List<Module> = emptyList()) = listOf(
+    coreModule,
+    databaseModule,
+    repositoryModule,
+    useCaseModule,
+    viewModelModule
+) + platformModules
