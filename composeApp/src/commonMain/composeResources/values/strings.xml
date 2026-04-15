@@ -38,6 +38,8 @@
     <string name="tab_search">Поиск</string>
     <string name="tab_favorites">Избранное</string>
     <string name="tab_profile">Профиль</string>
+    <string name="tab_files">Файлы</string>
+    <string name="offline_mode">Показаны сохранённые данные (офлайн)</string>
 
     <!-- Main Screen (Repositories) -->
     <string name="search_hint">Поиск репозиториев...</string>
@@ -59,8 +61,35 @@
     <string name="description">Описание</string>
     <string name="share">Поделиться</string>
     <string name="decline">Отмена</string>
+    <string name="upload_file">Загрузить файл</string>
+    <string name="commit_message">Сообщение коммита</string>
+    <string name="file_path">Путь к файлу (например, folder/file.txt)</string>
+    <string name="file_content">Содержимое (Base64)</string>
+    <string name="upload">Загрузить</string>
+    <string name="files_title">Файлы репозитория</string>
 
     <!-- Faborites Screen -->
     <string name="no_favorites">У вас пока нет избранных репозиториев</string>
 
+    <string name="forks_count">Форков</string>
+    <string name="create_button">Создать</string>
+    <string name="parent_dir">..</string>
+    <string name="readme_not_found">README не найден</string>
+    <string name="readme_error">Не удалось загрузить README</string>
+    <string name="share_text">Посмотри этот репозиторий:</string>
+    <string name="file_decode_error">Ошибка декодирования контента</string>
+    <string name="no_description">Нет описания</string>
+    <string name="issue_title_label">Заголовок</string>
+    <string name="select_file">Выбрать файл</string>
+    <string name="selected_file_prefix">Файл: </string>
+    <string name="success_issue_created">Issue успешно создано</string>
+    <string name="success_file_uploaded">Файл успешно загружен</string>
+    <string name="tab_info">Инфо</string>
+    <string name="tab_pulls">Pull Requests</string>
+
+    <!-- Errors -->
+    <string name="error_network">Ошибка сети. Проверьте подключение.</string>
+    <string name="error_server">Ошибка сервера GitHub. Попробуйте позже.</string>
+    <string name="error_unauthorized">Ошибка авторизации. Войдите заново.</string>
+    <string name="error_unknown">Произошла неизвестная ошибка.</string>
 </resources>
