@@ -9,5 +9,7 @@ data class UserProfileDto(
     val login: String,
     val name: String? = null,
     @SerialName("avatar_url") val avatarUrl: String,
-    val bio: String? = null
+    val bio: String? = null,
+    @SerialName("followers") val followersCount: Int? = 0,
+    @SerialName("public_repos") val publicReposCount: Int? = 0
 )
