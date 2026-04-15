@@ -12,12 +12,23 @@ import com.github.igorergin.ktsandroid.feature.auth.data.repository.GithubAuthRe
 import com.github.igorergin.ktsandroid.feature.auth.presentation.LoginViewModel
 import com.github.igorergin.ktsandroid.feature.detail.data.repository.DetailRepository
 import com.github.igorergin.ktsandroid.feature.detail.domain.usecase.CreateIssueUseCase
+import com.github.igorergin.ktsandroid.feature.detail.domain.usecase.GetContentUseCase
+import com.github.igorergin.ktsandroid.feature.detail.domain.usecase.GetPullRequestsUseCase
 import com.github.igorergin.ktsandroid.feature.detail.domain.usecase.GetReadmeUseCase
 import com.github.igorergin.ktsandroid.feature.detail.domain.usecase.GetRepositoryDetailsUseCase
+import com.github.igorergin.ktsandroid.feature.detail.domain.usecase.UploadFileUseCase
 import com.github.igorergin.ktsandroid.feature.detail.presentation.DetailViewModel
+import com.github.igorergin.ktsandroid.feature.notification.data.repository.NotificationRepositoryImpl
 import com.github.igorergin.ktsandroid.feature.profile.data.repository.ProfileRepository
+import com.github.igorergin.ktsandroid.feature.profile.domain.usecase.GetProfileUseCase
+import com.github.igorergin.ktsandroid.feature.profile.domain.usecase.GetUserActivityUseCase
+import com.github.igorergin.ktsandroid.feature.profile.domain.usecase.GetUserReposUseCase
 import com.github.igorergin.ktsandroid.feature.profile.presentation.ProfileViewModel
 import com.github.igorergin.ktsandroid.feature.repositories.data.local.AppDatabase
+import com.github.igorergin.ktsandroid.feature.repositories.data.local.GithubLocalDataSource
+import com.github.igorergin.ktsandroid.feature.repositories.data.local.GithubLocalDataSourceImpl
+import com.github.igorergin.ktsandroid.feature.repositories.data.remote.GithubRemoteDataSource
+import com.github.igorergin.ktsandroid.feature.repositories.data.remote.GithubRemoteDataSourceImpl
 import com.github.igorergin.ktsandroid.feature.repositories.data.repository.GithubRepoRepositoryImpl
 import com.github.igorergin.ktsandroid.feature.repositories.domain.repository.GithubRepoRepository
 import com.github.igorergin.ktsandroid.feature.repositories.domain.usecase.GetFavoritesUseCase
@@ -54,7 +65,12 @@ val repositoryModule = module {
     singleOf(::GithubAuthRepository)
     singleOf(::ProfileRepository)
     singleOf(::DetailRepository)
+    
+    singleOf(::GithubRemoteDataSourceImpl) bind GithubRemoteDataSource::class
+    singleOf(::GithubLocalDataSourceImpl) bind GithubLocalDataSource::class
+
     singleOf(::GithubRepoRepositoryImpl) bind GithubRepoRepository::class
+    single<com.github.igorergin.ktsandroid.core.notification.NotificationRepository> { NotificationRepositoryImpl(get()) }
 }
 
 val useCaseModule = module {
@@ -64,6 +80,14 @@ val useCaseModule = module {
     factoryOf(::GetRepositoryDetailsUseCase)
     factoryOf(::GetReadmeUseCase)
     factoryOf(::CreateIssueUseCase)
+    factoryOf(::GetContentUseCase)
+    factoryOf(::UploadFileUseCase)
+    factoryOf(::GetPullRequestsUseCase)
+    
+    // Profile UseCases
+    factoryOf(::GetProfileUseCase)
+    factoryOf(::GetUserReposUseCase)
+    factoryOf(::GetUserActivityUseCase)
 }
 
 val viewModelModule = module {
@@ -80,6 +104,11 @@ val viewModelModule = module {
             getRepositoryDetailsUseCase = get(),
             getReadmeUseCase = get(),
             createIssueUseCase = get(),
+            getContentUseCase = get(),
+            uploadFileUseCase = get(),
+            getPullRequestsUseCase = get(),
+            toggleFavoriteUseCase = get(),
+            getFavoritesUseCase = get(),
             shareManager = get(),
             dispatchers = get()
         )
