@@ -17,6 +17,8 @@ data class GithubRepoDto(
     @SerialName("description") val description: String? = null,
     @SerialName("stargazers_count") val starsCount: Int,
     @SerialName("language") val language: String? = null,
+    @SerialName("forks_count") val forksCount: Int? = 0,
+    @SerialName("open_issues_count") val openIssuesCount: Int? = 0,
     @SerialName("owner") val owner: GithubOwnerDto
 )
 

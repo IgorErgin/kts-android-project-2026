@@ -18,4 +18,6 @@ class SearchRepositoriesUseCase(
         val searchQuery = if (query.isBlank()) "stars:>1000" else query
         return repository.searchRepositories(searchQuery, page, forceRefresh = forceRefresh)
     }
+
+    fun getFavoritesFlow() = repository.getFavoritesFlow()
 }
