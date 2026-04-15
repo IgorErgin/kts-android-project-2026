@@ -2,37 +2,31 @@ package com.github.igorergin.ktsandroid.feature.repositories.presentation.compon
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
-import com.github.igorergin.ktsandroid.core.designsystem.theme.GitHubTextSecondary
 import com.github.igorergin.ktsandroid.feature.repositories.domain.model.GithubRepository
 
 @Composable
 fun RepositoryCard(
     repo: GithubRepository,
+    isFavorite: Boolean = false,
+    onFavoriteClick: () -> Unit = {},
     onClick: () -> Unit
 ) {
     Card(
@@ -65,14 +59,16 @@ fun RepositoryCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                Text(
-                    text = "⭐ ${repo.starsCount}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = GitHubTextSecondary
-                )
+                IconButton(onClick = onFavoriteClick) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Star else Icons.Outlined.StarBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFavorite) Color(0xFFFFD700) else MaterialTheme.colorScheme.outline
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (repo.description.isNotBlank()) {
                 Text(
@@ -86,6 +82,11 @@ fun RepositoryCard(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "⭐ ${repo.starsCount}",
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Spacer(modifier = Modifier.width(16.dp))
                 Box(
                     modifier = Modifier
                         .size(10.dp)
@@ -95,14 +96,12 @@ fun RepositoryCard(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = repo.language.ifBlank { "Unknown" },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = GitHubTextSecondary
+                    style = MaterialTheme.typography.labelSmall
                 )
             }
         }
     }
 }
-
 
 @Preview
 @Composable
@@ -112,14 +111,15 @@ private fun RepositoryCardPreview() {
             RepositoryCard(
                 repo = GithubRepository(
                     id = 1,
-                    name = "compose-multiplatform",
-                    fullName = "JetBrains/compose-multiplatform",
-                    description = "Compose Multiplatform, a modern UI framework for Kotlin that announces a new era of UI development.",
-                    starsCount = 15400,
+                    name = "kts-android",
+                    fullName = "igorergin/kts-android",
+                    description = "Учебный проект по разработке на Kotlin Multiplatform",
+                    starsCount = 42,
                     language = "Kotlin",
-                    ownerName = "JetBrains",
+                    ownerName = "igorergin",
                     ownerAvatarUrl = ""
                 ),
+                isFavorite = false,
                 onClick = {}
             )
         }
@@ -128,20 +128,21 @@ private fun RepositoryCardPreview() {
 
 @Preview
 @Composable
-private fun RepositoryCardLongTitlePreview() {
+private fun RepositoryCardFavoritePreview() {
     AppTheme(darkTheme = true) {
         Surface(modifier = Modifier.padding(16.dp)) {
             RepositoryCard(
                 repo = GithubRepository(
-                    id = 2,
-                    name = "very-long-repository-name-that-might-break-the-ui-layout-if-not-handled",
-                    fullName = "organization/very-long-repository-name-that-might-break-the-ui-layout-if-not-handled",
-                    description = "Short description",
-                    starsCount = 99,
-                    language = "TypeScript",
-                    ownerName = "organization",
+                    id = 1,
+                    name = "kts-android",
+                    fullName = "igorergin/kts-android",
+                    description = "Избранный репозиторий в темной теме",
+                    starsCount = 999,
+                    language = "Kotlin",
+                    ownerName = "igorergin",
                     ownerAvatarUrl = ""
                 ),
+                isFavorite = true,
                 onClick = {}
             )
         }

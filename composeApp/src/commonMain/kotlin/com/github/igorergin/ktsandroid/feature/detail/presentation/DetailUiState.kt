@@ -4,6 +4,12 @@ import com.github.igorergin.ktsandroid.feature.detail.domain.model.RepositoryDet
 
 data class DetailUiState(
     val repository: RepositoryDetail? = null,
+    val readme: String? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val isReadmeLoading: Boolean = false,
+    val error: String? = null,
+
+    val isIssueDialogVisible: Boolean = false,
+    val isIssueSending: Boolean = false,
+    val issueError: String? = null
 )

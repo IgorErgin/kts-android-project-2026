@@ -1,10 +1,11 @@
-package com.github.igorergin.ktsandroid
+package com.github.igorergin.ktsandroid.core.util
 
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import com.github.igorergin.ktsandroid.MainActivity
 import com.github.igorergin.ktsandroid.core.network.GithubAuthConfig
 import com.github.igorergin.ktsandroid.feature.auth.domain.AuthManager
 import kotlinx.coroutines.flow.MutableSharedFlow

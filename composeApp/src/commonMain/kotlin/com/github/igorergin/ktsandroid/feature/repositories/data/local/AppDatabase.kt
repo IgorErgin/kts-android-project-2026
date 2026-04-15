@@ -5,12 +5,11 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 
-@Database(entities = [RepositoryEntity::class], version = 1)
+@Database(entities = [RepositoryEntity::class, FavoriteEntity::class], version = 2)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun repositoryDao(): RepositoryDao
 }
-
 
 @Suppress("NO_ACTUAL_FOR_EXPECT")
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {

@@ -14,10 +14,16 @@ sealed interface Destination {
     data object Login : Destination
 
     @Serializable
-    data object Main : Destination
+    data object MainContainer : Destination
 
     @Serializable
-    data object Profile : Destination
+    data object SearchTab : Destination
+
+    @Serializable
+    data object FavoritesTab : Destination
+
+    @Serializable
+    data object ProfileTab : Destination
 
     @Serializable
     data class Detail(

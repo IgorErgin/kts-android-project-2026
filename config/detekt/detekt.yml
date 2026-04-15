@@ -1,0 +1,31 @@
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+  weights:
+    complexity: 2
+    formatting: 1
+
+style:
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+  MagicNumber:
+    active: true
+    ignoreNumbers: ['-1', '0', '1', '2', '100', '200', '401', '403', '500']
+    ignoreAnnotation: ['androidx.compose.ui.tooling.preview.Preview']
+  UnusedPrivateMember:
+    active: true
+    allowedNames: '(_|ignored|expected|serialVersionUID)'
+
+complexity:
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 15
+  LongMethod:
+    active: true
+    threshold: 60
+
+formatting:
+  active: true
+  android: false
+  autoCorrect: true

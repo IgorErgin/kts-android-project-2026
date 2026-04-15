@@ -11,28 +11,34 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.AddComment
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,16 +46,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.SubcomposeAsyncImage
-import com.github.igorergin.ktsandroid.core.designsystem.common.AppErrorState
+import coil3.compose.AsyncImage
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
 import com.github.igorergin.ktsandroid.core.designsystem.theme.GitHubTextSecondary
 import com.github.igorergin.ktsandroid.feature.detail.domain.model.RepositoryDetail
 import ktsandroidproject.composeapp.generated.resources.Res
+import ktsandroidproject.composeapp.generated.resources.create_issue
+import ktsandroidproject.composeapp.generated.resources.decline
+import ktsandroidproject.composeapp.generated.resources.description
 import ktsandroidproject.composeapp.generated.resources.details_language
+import ktsandroidproject.composeapp.generated.resources.error_prefix
+import ktsandroidproject.composeapp.generated.resources.header
+import ktsandroidproject.composeapp.generated.resources.no_data
+import ktsandroidproject.composeapp.generated.resources.readme_title
+import ktsandroidproject.composeapp.generated.resources.retry
 import ktsandroidproject.composeapp.generated.resources.stars_count
 import org.jetbrains.compose.resources.stringResource
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
     repoNameTitle: String,
@@ -62,10 +76,20 @@ fun DetailScreen(
         repoNameTitle = repoNameTitle,
         state = state,
         onBack = onBack,
-        onRetry = vm::loadRepository
+        onRetry = vm::loadAll,
+        onShare = vm::onShareClick,
+        onAddIssueClick = { vm.setIssueDialogVisible(true) }
     )
-}
 
+    if (state.isIssueDialogVisible) {
+        CreateIssueDialog(
+            isSending = state.isIssueSending,
+            error = state.issueError,
+            onDismiss = { vm.setIssueDialogVisible(false) },
+            onConfirm = vm::createIssue
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,184 +97,200 @@ fun DetailContent(
     repoNameTitle: String,
     state: DetailUiState,
     onBack: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onShare: () -> Unit,
+    onAddIssueClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(repoNameTitle, maxLines = 1) },
+                title = { Text(repoNameTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+                actions = {
+                    IconButton(onClick = onShare) {
+                        Icon(Icons.Default.Share, contentDescription = "Поделиться")
+                    }
+                    IconButton(onClick = onAddIssueClick) {
+                        Icon(Icons.Default.AddComment, contentDescription = "Создать Issue")
+                    }
+                }
             )
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when {
-                state.isLoading -> {
-                    CircularProgressIndicator(Modifier.align(Alignment.Center))
-                }
-
+                state.isLoading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                 state.error != null -> {
-                    AppErrorState(
-                        message = state.error,
-                        onRetry = onRetry,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-
-                else -> {
-                    state.repository?.let { repository ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 24.dp, vertical = 16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            SubcomposeAsyncImage(
-                                model = repository.ownerAvatarUrl,
-                                contentDescription = "Owner Avatar",
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                                loading = {
-                                    CircularProgressIndicator(modifier = Modifier.padding(32.dp))
-                                },
-                                error = {
-                                    Icon(
-                                        Icons.Default.Error,
-                                        contentDescription = "Error",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Text(
-                                repository.ownerLogin,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = GitHubTextSecondary
-                            )
-                            Text(
-                                repository.name,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            Spacer(modifier = Modifier.height(24.dp))
-
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                    horizontalArrangement = Arrangement.SpaceEvenly
-                                ) {
-                                    StatItem(stringResource(Res.string.stars_count), repository.starsCount.toString(), Icons.Default.Star)
-                                    StatItem(stringResource(Res.string.details_language ), repository.language ?: "N/A", null)
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(24.dp))
-
-                            repository.description?.let {
-                                Text(
-                                    text = it,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
+                    Column(
+                        Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "${stringResource(Res.string.error_prefix)}${state.error}",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Button(onClick = onRetry) { Text(stringResource(Res.string.retry)) }
                     }
                 }
+
+                state.repository != null -> {
+                    RepositoryInfo(
+                        repo = state.repository,
+                        readme = state.readme,
+                        isReadmeLoading = state.isReadmeLoading
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun StatItem(
+fun RepositoryInfo(repo: RepositoryDetail, readme: String?, isReadmeLoading: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AsyncImage(
+            model = repo.ownerAvatarUrl,
+            contentDescription = null,
+            modifier = Modifier.size(100.dp).clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(repo.ownerLogin, color = GitHubTextSecondary)
+        Text(
+            repo.name,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                Modifier.padding(16.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                StatView(stringResource(Res.string.stars_count), repo.starsCount.toString(), Icons.Default.Star)
+                StatView(stringResource(Res.string.details_language), repo.language ?: "N/A", Icons.Default.Code)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            stringResource(Res.string.readme_title),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.fillMaxWidth()
+        )
+        HorizontalDivider(Modifier.padding(vertical = 8.dp))
+
+        if (isReadmeLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(30.dp).padding(top = 16.dp))
+        } else {
+            Text(
+                text = readme ?: stringResource(Res.string.no_data),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+fun CreateIssueDialog(
+    isSending: Boolean,
+    error: String?,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var body by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.create_issue)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text(stringResource(Res.string.header)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = body,
+                    onValueChange = { body = it },
+                    label = { Text(stringResource(Res.string.description)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+                if (error != null) {
+                    Text(
+                        error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(title, body) },
+                enabled = !isSending && title.isNotBlank()
+            ) {
+                if (isSending) CircularProgressIndicator(Modifier.size(18.dp)) else Text("Создать")
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.decline)) } }
+    )
+}
+
+@Composable
+private fun StatView(
     label: String,
     value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector?
+    icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (icon != null) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-            }
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        }
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = GitHubTextSecondary)
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Text(value, fontWeight = FontWeight.Bold)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = GitHubTextSecondary)
     }
 }
 
-
 @Preview
 @Composable
-private fun DetailScreenSuccessPreview() {
+private fun DetailPreview() {
     AppTheme {
         DetailContent(
-            repoNameTitle = "Compose Multiplatform",
+            repoNameTitle = "kts-android",
             state = DetailUiState(
                 repository = RepositoryDetail(
-                    id = 1,
-                    name = "compose-multiplatform",
-                    fullName = "JetBrains/compose-multiplatform",
-                    description = "Compose Multiplatform, a modern UI framework for Kotlin that announces a new era of UI development.",
-                    starsCount = 15400,
-                    forksCount = 1200,
-                    openIssuesCount = 45,
-                    ownerLogin = "JetBrains",
-                    ownerAvatarUrl = "",
-                    language = "Kotlin",
-                    htmlUrl = ""
-                )
+                    1,
+                    "kts-android",
+                    "igorergin/kts-android",
+                    "Desc",
+                    42,
+                    5,
+                    2,
+                    "igorergin",
+                    "",
+                    "url",
+                    "Kotlin"
+                ),
+                readme = "Это превью README контента..."
             ),
-            onBack = {},
-            onRetry = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun DetailScreenLoadingPreview() {
-    AppTheme {
-        DetailContent(
-            repoNameTitle = "Загрузка...",
-            state = DetailUiState(isLoading = true),
-            onBack = {},
-            onRetry = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun DetailScreenErrorPreview() {
-    AppTheme {
-        DetailContent(
-            repoNameTitle = "Ошибка",
-            state = DetailUiState(error = "Не удалось загрузить данные. Проверьте соединение."),
-            onBack = {},
-            onRetry = {}
+            onBack = {}, onRetry = {}, onShare = {}, onAddIssueClick = {}
         )
     }
 }

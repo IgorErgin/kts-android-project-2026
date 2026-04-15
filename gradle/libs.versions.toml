@@ -24,7 +24,13 @@ ktor = "3.0.0"
 buildkonfig = "0.17.1"
 roomRuntime = "2.8.4"
 securityCryptoKtx = "1.1.0"
-sqliteBundled = "2.5.0-alpha11"
+sqliteBundled = "2.5.0"
+koin-bom = "4.2.0"
+detekt = "1.23.7"
+firebaseBom = "33.7.0"
+googleServices = "4.4.2"
+firebaseCrashlyticsPlugin = "3.0.2"
+leakcanary = "2.14"
 
 [libraries]
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
@@ -62,6 +68,15 @@ material-icons-extended = { module = "org.jetbrains.compose.material:material-ic
 napier = { module = "io.github.aakira:napier", version.ref = "napierVersion" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin-bom" }
+koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin-bom" }
+koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin-bom" }
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
+
 
 
 [plugins]
@@ -74,3 +89,6 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "kotlin" }
 room = { id = "androidx.room", version.ref = "roomRuntime" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }

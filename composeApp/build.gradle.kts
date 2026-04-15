@@ -11,6 +11,9 @@ plugins {
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.firebaseCrashlytics)
 
 
 }
@@ -43,6 +46,9 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.appauth)
             implementation(libs.androidx.datastore.preferences)
+            implementation(project.dependencies.platform(libs.firebase.bom))
+            implementation(libs.firebase.crashlytics)
+            implementation(libs.firebase.analytics)
 
         }
         commonMain.dependencies {
@@ -70,8 +76,9 @@ kotlin {
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
             implementation(libs.androidx.security.crypto.ktx)
-
-
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -97,9 +104,29 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    signingConfigs {
+        val props = JavaProperties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { props.load(it) }
+        }
+
+        register("release").configure {
+            storeFile = file("upload-keystore")
+            storePassword = props.getProperty("STORE_PASSWORD")
+            keyAlias = "key0"
+            keyPassword = props.getProperty("KEY_PASSWORD")
+        }
+    }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -108,8 +135,16 @@ android {
     }
 }
 
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$rootDir/config/detekt/baseline.xml")
+}
+
 dependencies {
     debugImplementation(libs.compose.uiTooling)
+    debugImplementation(libs.leakcanary.android)
     ksp(libs.androidx.room.compiler)
 
 }
