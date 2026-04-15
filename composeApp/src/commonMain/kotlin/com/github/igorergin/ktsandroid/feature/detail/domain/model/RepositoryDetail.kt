@@ -1,10 +1,12 @@
 package com.github.igorergin.ktsandroid.feature.detail.domain.model
 
+import com.github.igorergin.ktsandroid.feature.repositories.domain.model.RepositoryId
+
 /**
  * Расширенная модель деталей репозитория.
  */
 data class RepositoryDetail(
-    val id: Long,
+    val id: RepositoryId,
     val name: String,
     val fullName: String,
     val description: String,
