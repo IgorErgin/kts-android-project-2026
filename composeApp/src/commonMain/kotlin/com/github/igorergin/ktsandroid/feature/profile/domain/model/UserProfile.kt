@@ -8,5 +8,7 @@ data class UserProfile(
     val login: String,
     val name: String?,
     val avatarUrl: String,
-    val bio: String?
+    val bio: String?,
+    val followersCount: Int,
+    val publicReposCount: Int
 )

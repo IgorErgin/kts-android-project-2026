@@ -20,9 +20,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
 import com.github.igorergin.ktsandroid.core.navigation.Destination
+import com.github.igorergin.ktsandroid.core.util.SnackbarManager
 import com.github.igorergin.ktsandroid.feature.repositories.presentation.MainScreen
 import com.github.igorergin.ktsandroid.feature.profile.presentation.ProfileScreen
 import com.github.igorergin.ktsandroid.feature.repositories.presentation.favorites.FavoritesScreen
+import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -34,9 +36,18 @@ fun MainContainerScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        SnackbarManager.messages.collectLatest { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     MainContainerContent(
         navController = navController,
         currentDestination = currentDestination,
+        snackbarHostState = snackbarHostState,
         onNavigateToDetail = onNavigateToDetail,
         onNavigateToLogin = onNavigateToLogin
     )
@@ -46,10 +57,12 @@ fun MainContainerScreen(
 fun MainContainerContent(
     navController: NavHostController,
     currentDestination: NavDestination?,
+    snackbarHostState: SnackbarHostState,
     onNavigateToDetail: (String, String) -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
@@ -113,7 +126,8 @@ fun MainContainerContent(
                 ProfileScreen(
                     viewModel = koinViewModel(),
                     onBack = { /* Не требуется в табе */ },
-                    onNavigateToLogin = onNavigateToLogin
+                    onNavigateToLogin = onNavigateToLogin,
+                    onRepoClick = onNavigateToDetail
                 )
             }
         }
@@ -127,6 +141,7 @@ private fun MainContainerPreview() {
         MainContainerContent(
             navController = rememberNavController(),
             currentDestination = null,
+            snackbarHostState = remember { SnackbarHostState() },
             onNavigateToDetail = { _, _ -> },
             onNavigateToLogin = {}
         )
@@ -140,6 +155,7 @@ private fun MainContainerDarkPreview() {
         MainContainerContent(
             navController = rememberNavController(),
             currentDestination = null,
+            snackbarHostState = remember { SnackbarHostState() },
             onNavigateToDetail = { _, _ -> },
             onNavigateToLogin = {}
         )

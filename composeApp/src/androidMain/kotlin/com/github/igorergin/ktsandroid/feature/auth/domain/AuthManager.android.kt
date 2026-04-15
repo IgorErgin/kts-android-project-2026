@@ -1,4 +1,4 @@
-package com.github.igorergin.ktsandroid.core.util
+package com.github.igorergin.ktsandroid.feature.auth.domain
 
 import android.app.PendingIntent
 import android.content.Context
@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import com.github.igorergin.ktsandroid.MainActivity
 import com.github.igorergin.ktsandroid.core.network.GithubAuthConfig
-import com.github.igorergin.ktsandroid.feature.auth.domain.AuthManager
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -16,14 +15,14 @@ import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
 import net.openid.appauth.ResponseTypeValues
 
-class AndroidAuthManager(private val context: Context) : AuthManager {
+actual class AuthManager(private val context: Context) {
 
     private val _authCodeFlow = MutableSharedFlow<String>(extraBufferCapacity = 1)
-    override val authCodeFlow: SharedFlow<String> = _authCodeFlow.asSharedFlow()
+    actual val authCodeFlow: SharedFlow<String> = _authCodeFlow.asSharedFlow()
 
     private var authService: AuthorizationService? = null
 
-    override fun launchAuthFlow() {
+    actual fun launchAuthFlow() {
         val serviceConfiguration = AuthorizationServiceConfiguration(
             Uri.parse(GithubAuthConfig.AUTH_ENDPOINT),
             Uri.parse(GithubAuthConfig.TOKEN_ENDPOINT)
@@ -54,11 +53,10 @@ class AndroidAuthManager(private val context: Context) : AuthManager {
 
         val pendingIntent = PendingIntent.getActivity(context, 0, returnIntent, pendingIntentFlags)
 
-
         currentService.performAuthorizationRequest(authRequest, pendingIntent, pendingIntent)
     }
 
-    override fun dispose() {
+    actual fun dispose() {
         authService?.dispose()
         authService = null
     }

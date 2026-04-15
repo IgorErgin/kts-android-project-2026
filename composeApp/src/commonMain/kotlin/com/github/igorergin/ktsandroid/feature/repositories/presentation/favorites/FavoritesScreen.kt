@@ -1,18 +1,28 @@
 package com.github.igorergin.ktsandroid.feature.repositories.presentation.favorites
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.igorergin.ktsandroid.core.designsystem.theme.AppTheme
 import com.github.igorergin.ktsandroid.feature.repositories.domain.model.GithubRepository
+import com.github.igorergin.ktsandroid.feature.repositories.domain.model.RepositoryId
 import com.github.igorergin.ktsandroid.feature.repositories.presentation.components.RepositoryCard
 import ktsandroidproject.composeapp.generated.resources.Res
 import ktsandroidproject.composeapp.generated.resources.no_favorites
@@ -64,7 +74,7 @@ fun FavoritesContent(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(state.favorites, key = { it.id }) { repo ->
+                        items(state.favorites, key = { it.id.value }) { repo ->
                             RepositoryCard(
                                 repo = repo,
                                 isFavorite = true,
@@ -98,8 +108,8 @@ private fun FavoritesListPreview() {
         FavoritesContent(
             state = FavoritesUiState(
                 favorites = listOf(
-                    GithubRepository(1, "Repo 1", "Owner/Repo 1", "Desc", "Kotlin", 10, "Owner", ""),
-                    GithubRepository(2, "Repo 2", "Owner/Repo 2", "Desc", "Java", 20, "Owner", "")
+                    GithubRepository(RepositoryId(1L), "Repo 1", "Owner/Repo 1", "Desc", "Kotlin", 10, "Owner", ""),
+                    GithubRepository(RepositoryId(2L), "Repo 2", "Owner/Repo 2", "Desc", "Java", 20, "Owner", "")
                 )
             ),
             onToggleFavorite = {},
