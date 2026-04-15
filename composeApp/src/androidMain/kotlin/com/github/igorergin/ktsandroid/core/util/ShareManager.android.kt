@@ -3,7 +3,6 @@ package com.github.igorergin.ktsandroid.core.util
 import android.content.Context
 import android.content.Intent
 
-
 class AndroidShareManager(private val context: Context) : ShareManager {
     override fun shareText(text: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {

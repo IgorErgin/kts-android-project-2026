@@ -8,6 +8,7 @@ import com.github.igorergin.ktsandroid.core.datastore.TokenManager
 import com.github.igorergin.ktsandroid.core.datastore.createAndroidDataStore
 import com.github.igorergin.ktsandroid.core.util.AndroidShareManager
 import com.github.igorergin.ktsandroid.core.util.ShareManager
+import com.github.igorergin.ktsandroid.feature.auth.domain.AuthManager
 import com.github.igorergin.ktsandroid.feature.repositories.data.local.AppDatabase
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.bind
@@ -30,6 +31,7 @@ val androidModule = module {
     single { TokenManager(get()) }
 
     single { AndroidShareManager(androidContext()) } bind ShareManager::class
+    single { AuthManager(androidContext()) }
 }
 
 
